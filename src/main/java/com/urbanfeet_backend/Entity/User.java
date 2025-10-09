@@ -1,5 +1,6 @@
 package com.urbanfeet_backend.Entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -14,6 +15,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.Email;
@@ -86,6 +88,13 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false, length = 40)
     @Enumerated(EnumType.STRING)
     private Set<RoleName> roles = new HashSet<>();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "direccion_id")
+    private Direccion direccion;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Carrito carrito;
 
     /*
      * Normalización ligera:
