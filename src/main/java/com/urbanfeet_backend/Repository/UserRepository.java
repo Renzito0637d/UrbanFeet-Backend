@@ -3,11 +3,13 @@ package com.urbanfeet_backend.Repository;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     // Método personalizado que busca un usuario en la base de datos por su correo
     // electrónico.

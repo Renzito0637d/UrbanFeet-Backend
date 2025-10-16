@@ -21,7 +21,7 @@ public class Zapatilla_variacion {
     private String talla;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zapatilla", nullable = false)
+    @JoinColumn(name = "zapatilla_id", nullable = false)
     private Zapatilla zapatilla;
 
     public Zapatilla_variacion() {
