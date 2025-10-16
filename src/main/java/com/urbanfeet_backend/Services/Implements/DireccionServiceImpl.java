@@ -40,4 +40,9 @@ public class DireccionServiceImpl implements DireccionService {
         direccionDao.deleteById(id);
     }
 
+    @Override
+    public List<Direccion> buscarPorUsuarioId(Integer userId) {
+        return direccionDao.findByUserId(userId);
+    }
+
 }

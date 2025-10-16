@@ -10,13 +10,13 @@ public interface UserService {
 
     public List<User> listarUsers();
 
-    public User obtenerUserPorId(Long id);
+    public User obtenerUserPorId(Integer id);
 
     public void guardarUser(User User);
 
     public void actualizarUser(User User);
 
-    public void eliminarUser(Long id);
+    public void eliminarUser(Integer id);
 
     public AuthResponse registerCliente(RegisterRequest request);
 

@@ -16,4 +16,6 @@ public interface DireccionService {
 
     public void eliminarPorId(Integer id);
 
+    public List<Direccion> buscarPorUsuarioId(Integer userId);
+
 }

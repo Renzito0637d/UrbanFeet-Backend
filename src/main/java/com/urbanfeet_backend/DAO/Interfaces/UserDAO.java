@@ -9,13 +9,13 @@ import com.urbanfeet_backend.Entity.Enum.DocumentType;
 public interface UserDAO {
     public List<User> listarUsers();
 
-    public User obtenerUserPorId(Long id);
+    public User obtenerUserPorId(Integer id);
 
     public void guardarUser(User User);
 
     public void actualizarUser(User User);
 
-    public void eliminarUser(Long id);
+    public void eliminarUser(Integer id);
 
     public Optional<User> buscarUserPorCorreo(String email);
     

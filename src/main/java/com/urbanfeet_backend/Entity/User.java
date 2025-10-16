@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -33,6 +34,7 @@ import com.urbanfeet_backend.Model.ValidDocumentNumber;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @NotBlank
     @Column(nullable = false, length = 120)
@@ -89,9 +91,8 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<RoleName> roles = new HashSet<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "direccion_id")
-    private Direccion direccion;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Direccion> direcciones;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Carrito carrito;
@@ -113,7 +114,7 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(Long id, String nombre, String apellido, String email, String phone, String passwordHash,
+    public User(Integer id, String nombre, String apellido, String email, String phone, String passwordHash,
             String documentNumber) {
         this.id = id;
         this.nombre = nombre;
@@ -172,11 +173,11 @@ public class User implements UserDetails {
         return Boolean.TRUE.equals(this.active);
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -253,7 +254,7 @@ public class User implements UserDetails {
     }
 
     public static class Builder {
-        private Long id;
+        private Integer id;
         private String nombre;
         private String apellido;
         private String email;
@@ -264,7 +265,7 @@ public class User implements UserDetails {
         private String documentNumber;
         private Set<RoleName> roles = new HashSet<>();
 
-        public Builder id(Long id) {
+        public Builder id(Integer id) {
             this.id = id;
             return this;
         }

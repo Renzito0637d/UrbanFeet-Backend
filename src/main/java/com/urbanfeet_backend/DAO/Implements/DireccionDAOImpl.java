@@ -39,5 +39,10 @@ public class DireccionDAOImpl implements DireccionDAO {
     public void deleteById(Integer id) {
         direccionRepository.deleteById(id);
     }
+
+    @Override
+    public List<Direccion> findByUserId(Integer userId) {
+        return direccionRepository.findByUser_Id(userId);
+    }
     
 }

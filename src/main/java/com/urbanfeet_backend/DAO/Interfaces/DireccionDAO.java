@@ -16,4 +16,6 @@ public interface DireccionDAO {
 
     public void deleteById(Integer id);
 
+    public List<Direccion> findByUserId(Integer userId);
+
 }

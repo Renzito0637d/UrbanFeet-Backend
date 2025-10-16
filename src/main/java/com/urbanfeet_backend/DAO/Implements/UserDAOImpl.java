@@ -23,7 +23,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public User obtenerUserPorId(Long id) {
+    public User obtenerUserPorId(Integer id) {
         return userRepository.findById(id).get();
     }
 
@@ -38,7 +38,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public void eliminarUser(Long id) {
+    public void eliminarUser(Integer id) {
         User usuarioObj = userRepository.findById(id).get();
         userRepository.delete(usuarioObj);
     }

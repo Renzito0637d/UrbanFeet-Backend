@@ -9,7 +9,7 @@ import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     // Método personalizado que busca un usuario en la base de datos por su correo
     // electrónico.

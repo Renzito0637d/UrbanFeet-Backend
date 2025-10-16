@@ -3,11 +3,13 @@ package com.urbanfeet_backend.DAO.Implements;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.DAO.Interfaces.Zapatilla_variacionDAO;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 import com.urbanfeet_backend.Repository.Zapatilla_variacionRepository;
 
+@Repository
 public class Zapatilla_variacionDAOImpl implements Zapatilla_variacionDAO {
 
     @Autowired

@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User obtenerUserPorId(Long id) {
+    public User obtenerUserPorId(Integer id) {
         return userDAO.obtenerUserPorId(id);
     }
 
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void eliminarUser(Long id) {
+    public void eliminarUser(Integer id) {
         userDAO.eliminarUser(id);
     }
 
