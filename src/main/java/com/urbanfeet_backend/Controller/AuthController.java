@@ -85,7 +85,7 @@ public class AuthController {
                                 .body(new AuthResponse("ok"));
         }
 
-        public record MeResponse(Long id, String email, String apellido, List<String> roles) {
+        public record MeResponse(Integer id, String email, String apellido, List<String> roles) {
         }
 
         // Preubas
@@ -97,7 +97,7 @@ public class AuthController {
                                 ? ud.getUsername()
                                 : principal.toString();
 
-                Long id = tryInvoke(principal, "getId", Long.class); // si tu User tiene getId()
+                Integer id = tryInvoke(principal, "getId", Integer.class); // si tu User tiene getId()
                 String apellido = tryInvoke(principal, "getApellido", String.class); // si tu User tiene getNickname()
 
                 List<String> roles = auth.getAuthorities().stream()
