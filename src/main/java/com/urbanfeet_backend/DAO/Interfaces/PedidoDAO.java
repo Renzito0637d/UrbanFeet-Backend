@@ -1,5 +1,5 @@
 package com.urbanfeet_backend.DAO.Interfaces;
 
-public class PedidoDAO {
+public interface PedidoDAO {
     
 }
