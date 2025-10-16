@@ -1,10 +1,8 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.urbanfeet_backend.Entity.User;
-import com.urbanfeet_backend.Entity.Enum.DocumentType;
 import com.urbanfeet_backend.Model.AuthResponse;
 import com.urbanfeet_backend.Model.RegisterRequest;
 
