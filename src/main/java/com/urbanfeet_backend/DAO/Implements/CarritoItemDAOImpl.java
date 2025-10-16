@@ -1,17 +1,17 @@
-package com.urbanfeet_backend.Dao.Implement;
+package com.urbanfeet_backend.DAO.Implements;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.urbanfeet_backend.Dao.Interfaces.CarritoItemDao;
+import com.urbanfeet_backend.DAO.Interfaces.CarritoItemDAO;
 import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Repository.CarritoItemRepository;
 
 @Repository
-public class CarritoItemDaoImpl implements CarritoItemDao {
+public class CarritoItemDAOImpl implements CarritoItemDAO {
 
     @Autowired
     private CarritoItemRepository carritoItemRepository;

@@ -16,18 +16,4 @@ public class CarritoItemServiceImpl implements CarritoItemService {
     @Autowired
     private CarritoItemDAO carritoItemDao;
 
-    @Override
-    public List<Carrito_item> getItemsByCarrito(Carrito carrito) {
-        return carritoItemDao.findByCarrito(carrito);
-    }
-
-    @Override
-    public Carrito_item saveItem(Carrito_item item) {
-        return carritoItemDao.save(item);
-    }
-
-    @Override
-    public void deleteItem(Carrito_item item) {
-        carritoItemDao.delete(item);
-    }
 }
