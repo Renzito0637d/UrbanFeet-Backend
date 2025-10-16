@@ -3,11 +3,13 @@ package com.urbanfeet_backend.DAO.Implements;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.DAO.Interfaces.VentaDAO;
 import com.urbanfeet_backend.Entity.Venta;
 import com.urbanfeet_backend.Repository.VentaRepository;
 
+@Repository
 public class VentaDAOImpl implements VentaDAO {
 
     @Autowired

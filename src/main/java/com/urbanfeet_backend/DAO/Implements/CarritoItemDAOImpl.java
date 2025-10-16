@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.DAO.Interfaces.CarritoItemDAO;
-import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Repository.CarritoItemRepository;
 
@@ -17,17 +16,28 @@ public class CarritoItemDAOImpl implements CarritoItemDAO {
     private CarritoItemRepository carritoItemRepository;
 
     @Override
-    public List<Carrito_item> findByCarrito(Carrito carrito) {
-        return carritoItemRepository.findByCarrito(carrito);
+    public List<Carrito_item> findAll() {
+        return carritoItemRepository.findAll();
     }
 
     @Override
-    public Carrito_item save(Carrito_item item) {
-        return carritoItemRepository.save(item);
+    public void save(Carrito_item carrito) {
+        carritoItemRepository.save(carrito);
     }
 
     @Override
-    public void delete(Carrito_item item) {
-        carritoItemRepository.delete(item);
+    public Carrito_item findById(Integer id) {
+        return carritoItemRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public void update(Carrito_item carrito) {
+        carritoItemRepository.save(carrito);
+    }
+
+    @Override
+    public void deleteById(Integer id) {
+        carritoItemRepository.deleteById(id);
+    }
+
 }

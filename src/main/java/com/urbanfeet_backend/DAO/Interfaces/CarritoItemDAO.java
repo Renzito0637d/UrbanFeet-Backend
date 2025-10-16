@@ -2,11 +2,18 @@ package com.urbanfeet_backend.DAO.Interfaces;
 
 import java.util.List;
 
-import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 
 public interface CarritoItemDAO {
-    List<Carrito_item> findByCarrito(Carrito carrito);
-    Carrito_item save(Carrito_item item);
-    void delete(Carrito_item item);
+    
+    public List<Carrito_item> findAll();
+
+    public void save(Carrito_item carrito_item);
+
+    public Carrito_item findById(Integer id);
+
+    public void update(Carrito_item carrito_item);
+
+    public void deleteById(Integer id);
+
 }

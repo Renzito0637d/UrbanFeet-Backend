@@ -15,4 +15,5 @@ public interface VentaDAO {
     public void update(Venta venta);
 
     public void deleteById(Integer id);
+    
 }

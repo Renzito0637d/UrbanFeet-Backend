@@ -15,7 +15,7 @@ import com.urbanfeet_backend.Repository.UserRepository;
 public class UserDAOImpl implements UserDAO {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Override
     public List<User> listarUsers() {
