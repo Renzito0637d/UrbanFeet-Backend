@@ -85,7 +85,7 @@ public class AuthController {
                                 .body(new AuthResponse("ok"));
         }
 
-        public record MeResponse(Long id, String email, String fullname, List<String> roles) {
+        public record MeResponse(Long id, String email, String apellido, List<String> roles) {
         }
 
         // Preubas
@@ -98,13 +98,13 @@ public class AuthController {
                                 : principal.toString();
 
                 Long id = tryInvoke(principal, "getId", Long.class); // si tu User tiene getId()
-                String fullname = tryInvoke(principal, "getFullName", String.class); // si tu User tiene getNickname()
+                String apellido = tryInvoke(principal, "getApellido", String.class); // si tu User tiene getNickname()
 
                 List<String> roles = auth.getAuthorities().stream()
                                 .map(GrantedAuthority::getAuthority) // p.ej. "ROLE_ADMIN"
                                 .toList();
 
-                return new MeResponse(id, email, fullname, roles);
+                return new MeResponse(id, email, apellido, roles);
         }
 
         // Refresca el token leyendo la cookie ACCESS_TOKEN y reemitiendo otra
@@ -162,9 +162,5 @@ public class AuthController {
                 return ResponseEntity.ok().body(userService.registerCliente(request));
         }
 
-        @PostMapping("/registerAdmin")
-        public ResponseEntity<AuthResponse> registerAdmin(@RequestBody RegisterRequest request) {
-                return ResponseEntity.ok().body(userService.registerAdmin(request));
-        }
 
 }
