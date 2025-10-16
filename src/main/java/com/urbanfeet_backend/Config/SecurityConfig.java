@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 "/actuator/health")
                         .permitAll()
 
-                        // Por roles (asegúrate que los GrantedAuthority tengan prefijo "ROLE_")
+                        // Por roles (GrantedAuthority tiene "ROLE_")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cliente/**").hasRole("CLIENTE")
 
