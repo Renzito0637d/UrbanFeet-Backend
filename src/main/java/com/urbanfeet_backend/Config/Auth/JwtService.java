@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Config;
+package com.urbanfeet_backend.Config.Auth;
 
 import java.util.Map;
 
@@ -14,10 +14,10 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.secret}")
+    @Value("${security.jwt.secret:}")
     private String secret; // clave secreta para firmar los tokens
 
-    @Value("${security.jwt.exp-seconds:900}")
+    @Value("${security.jwt.exp-seconds:3600}")
     private long accessExp;
 
     @Value("${security.jwt.refresh-exp-seconds:604800}")
