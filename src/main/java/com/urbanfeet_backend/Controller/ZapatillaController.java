@@ -15,32 +15,35 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequestMapping("/zapatilla")
 public class ZapatillaController {
 
-    @Autowired
-    private ZapatillaService zapatillaService;
+        @Autowired
+        private ZapatillaService zapatillaService;
+        
+        // REFACTORIZAR EN SERIVIOS
+        // ---------------------------------------------------------
 
-    public record ZapatillaRecord(
-            String nombre,
-            String descripcion,
-            String marca,
-            String genero,
-            String tipo) {
-    }
+        // public record ZapatillaRecord(
+        // String nombre,
+        // String descripcion,
+        // String marca,
+        // String genero,
+        // String tipo) {
+        // }
 
-    @GetMapping("/all")
-    public List<ZapatillaRecord> todasLasZapatillas() {
+        // @GetMapping("/all")
+        // public List<ZapatillaRecord> todasLasZapatillas() {
 
-        List<Zapatilla> zapatillasEntidades = zapatillaService.obtenerTodo();
+        // List<Zapatilla> zapatillasEntidades = zapatillaService.obtenerTodo();
 
-        List<ZapatillaRecord> zapatillasRecords = zapatillasEntidades.stream()
-                .map(zapatilla -> new ZapatillaRecord(
-                        zapatilla.getNombre(),
-                        zapatilla.getDescripcion(),
-                        zapatilla.getMarca(),
-                        zapatilla.getGenero(),
-                        zapatilla.getTipo()))
-                .collect(Collectors.toList());
+        // List<ZapatillaRecord> zapatillasRecords = zapatillasEntidades.stream()
+        // .map(zapatilla -> new ZapatillaRecord(
+        // zapatilla.getNombre(),
+        // zapatilla.getDescripcion(),
+        // zapatilla.getMarca(),
+        // zapatilla.getGenero(),
+        // zapatilla.getTipo()))
+        // .collect(Collectors.toList());
 
-        return zapatillasRecords;
-    }
+        // return zapatillasRecords;
+        // }
 
 }

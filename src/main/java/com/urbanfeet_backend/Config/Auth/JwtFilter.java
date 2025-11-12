@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Config;
+package com.urbanfeet_backend.Config.Auth;
 
 import java.io.IOException;
 import java.util.Arrays;

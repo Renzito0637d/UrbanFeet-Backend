@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.urbanfeet_backend.Config.JwtService;
+import com.urbanfeet_backend.Config.Auth.JwtService;
 import com.urbanfeet_backend.DAO.Interfaces.UserDAO;
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
