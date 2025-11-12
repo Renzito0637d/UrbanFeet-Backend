@@ -10,8 +10,8 @@ import com.urbanfeet_backend.Config.Auth.JwtService;
 import com.urbanfeet_backend.DAO.Interfaces.UserDAO;
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 import com.urbanfeet_backend.Services.Interfaces.UserService;
 
 @Service

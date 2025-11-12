@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Model;
+package com.urbanfeet_backend.Model.AuthDTOs;
 
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 

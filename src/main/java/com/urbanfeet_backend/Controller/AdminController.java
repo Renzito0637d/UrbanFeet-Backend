@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Zapatilla;
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 import com.urbanfeet_backend.Services.Interfaces.UserService;
 import com.urbanfeet_backend.Services.Interfaces.ZapatillaService;
 

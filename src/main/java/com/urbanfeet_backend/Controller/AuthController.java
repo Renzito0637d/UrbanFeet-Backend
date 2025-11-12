@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.AuthenticationRequest;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthenticationRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 import com.urbanfeet_backend.Services.Implements.AuthServiceImpl.LoginResult;
 import com.urbanfeet_backend.Services.Implements.AuthServiceImpl.LogoutCookies;
 import com.urbanfeet_backend.Services.Implements.AuthServiceImpl.MeResponse;
