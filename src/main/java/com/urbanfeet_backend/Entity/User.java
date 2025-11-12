@@ -28,8 +28,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
-import com.urbanfeet_backend.Model.RegisterRequest;
 import com.urbanfeet_backend.Model.ValidDocumentNumber;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 
 import java.util.Collection;
 import java.util.Collections;

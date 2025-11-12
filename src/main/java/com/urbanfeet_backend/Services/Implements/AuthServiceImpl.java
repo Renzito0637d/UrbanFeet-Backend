@@ -17,8 +17,8 @@ import com.urbanfeet_backend.Config.Auth.ForbiddenRefreshException;
 import com.urbanfeet_backend.Config.Auth.InvalidTokenException;
 import com.urbanfeet_backend.Config.Auth.JwtService;
 import com.urbanfeet_backend.Config.Auth.TokenExpiredException;
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.AuthenticationRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthenticationRequest;
 import com.urbanfeet_backend.Services.Interfaces.AuthService;
 
 @Service

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.urbanfeet_backend.DAO.Interfaces.UserDAO;
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 import com.urbanfeet_backend.Services.Interfaces.UserService;
 
 @Component
