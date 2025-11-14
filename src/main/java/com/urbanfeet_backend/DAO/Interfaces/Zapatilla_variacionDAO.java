@@ -12,8 +12,9 @@ public interface Zapatilla_variacionDAO {
 
     public Zapatilla_variacion findById(Integer id);
 
-    public void update(Zapatilla_variacion zapatilla_variacion);
+    public Zapatilla_variacion update(Integer id, Zapatilla_variacion variacionDetails);
 
     public void deleteById(Integer id);
 
+    public List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
 }

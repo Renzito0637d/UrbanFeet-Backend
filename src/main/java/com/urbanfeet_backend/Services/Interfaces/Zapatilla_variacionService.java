@@ -1,7 +1,6 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 
 public interface Zapatilla_variacionService {
@@ -12,8 +11,10 @@ public interface Zapatilla_variacionService {
 
     public Zapatilla_variacion buscarPorId(Integer id);
 
-    public void actualizar(Zapatilla_variacion zapatilla_variacion);
+    // acepte el ID y los detalles
+    public Zapatilla_variacion actualizar(Integer id, Zapatilla_variacion zapatilla_variacion);
 
     public void eliminarPorId(Integer id);
 
+    public List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
 }
