@@ -21,8 +21,8 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
-    public void guardar(Carrito carrito) {
-        carritoDao.save(carrito);
+    public Carrito guardar(Carrito carrito) {
+        return carritoDao.save(carrito);
     }
 
     @Override
@@ -31,8 +31,8 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
-    public void actualizar(Carrito carrito) {
-        carritoDao.update(carrito);
+    public Carrito actualizar(Carrito carrito) {
+        return carritoDao.update(carrito);
     }
 
     @Override
