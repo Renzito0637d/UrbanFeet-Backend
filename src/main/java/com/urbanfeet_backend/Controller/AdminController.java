@@ -38,10 +38,4 @@ public class AdminController {
         return userService.listarUsers();
     }
 
-    @PostMapping("/crearZapatilla")
-    public ResponseEntity<Zapatilla> crearZapatilla(@RequestBody Zapatilla zapatilla) {
-        zapatillaService.guardar(zapatilla);
-        return ResponseEntity.ok(zapatilla);
-    }
-
 }

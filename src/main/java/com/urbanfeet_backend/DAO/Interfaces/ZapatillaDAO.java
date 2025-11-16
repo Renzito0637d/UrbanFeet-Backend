@@ -1,19 +1,17 @@
 package com.urbanfeet_backend.DAO.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Zapatilla;
 
 public interface ZapatillaDAO {
     
-    public List<Zapatilla> findAll();
+    List<Zapatilla> findAll();
 
-    public void save(Zapatilla zapatilla);
+    Zapatilla save(Zapatilla zapatilla);   // <-- antes era void
 
-    public Zapatilla findById(Integer id);
+    Zapatilla findById(Integer id);
 
-    public void update(Zapatilla zapatilla);
+    void update(Zapatilla zapatilla);
 
-    public void deleteById(Integer id);
-
+    void deleteById(Integer id);
 }

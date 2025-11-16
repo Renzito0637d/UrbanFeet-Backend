@@ -1,7 +1,6 @@
 package com.urbanfeet_backend.DAO.Implements;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -21,8 +20,8 @@ public class ZapatillaDAOImpl implements ZapatillaDAO {
     }
 
     @Override
-    public void save(Zapatilla zapatilla) {
-        zapatillaRepository.save(zapatilla);
+    public Zapatilla save(Zapatilla zapatilla) {
+        return zapatillaRepository.save(zapatilla); // <-- retorna entidad
     }
 
     @Override
@@ -39,5 +38,4 @@ public class ZapatillaDAOImpl implements ZapatillaDAO {
     public void deleteById(Integer id) {
         zapatillaRepository.deleteById(id);
     }
-    
 }
