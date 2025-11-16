@@ -5,16 +5,15 @@ import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 
 public interface Zapatilla_variacionService {
 
-    public List<Zapatilla_variacion> obtenerTodo();
+    List<Zapatilla_variacion> obtenerTodo();
 
-    public void guardar(Zapatilla_variacion zapatilla_variacion);
+    Zapatilla_variacion guardar(Zapatilla_variacion variacion); // retorna entidad
 
-    public Zapatilla_variacion buscarPorId(Integer id);
+    Zapatilla_variacion obtenerPorId(Integer id);
 
-    // acepte el ID y los detalles
-    public Zapatilla_variacion actualizar(Integer id, Zapatilla_variacion zapatilla_variacion);
+    Zapatilla_variacion actualizar(Integer id, Zapatilla_variacion variacion);
 
-    public void eliminarPorId(Integer id);
+    void eliminarPorId(Integer id);
 
-    public List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
+    List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
 }

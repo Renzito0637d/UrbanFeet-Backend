@@ -1,7 +1,6 @@
 package com.urbanfeet_backend.Services.Implements;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +20,13 @@ public class ZapatillaServiceImpl implements ZapatillaService {
     }
 
     @Override
-    public void guardar(Zapatilla zapatilla) {
-        zapatillaDao.save(zapatilla);
+    public Zapatilla guardar(Zapatilla zapatilla) {
+        return zapatillaDao.save(zapatilla); // <-- ahora retorna
     }
 
     @Override
-    public Zapatilla buscarPorId(Integer id) {
-        return zapatillaDao.findById(id);
+    public Zapatilla obtenerPorId(Integer id) {
+        return zapatillaDao.findById(id);    // <-- método renombrado correctamente
     }
 
     @Override
@@ -39,5 +38,4 @@ public class ZapatillaServiceImpl implements ZapatillaService {
     public void eliminarPorId(Integer id) {
         zapatillaDao.deleteById(id);
     }
-
 }

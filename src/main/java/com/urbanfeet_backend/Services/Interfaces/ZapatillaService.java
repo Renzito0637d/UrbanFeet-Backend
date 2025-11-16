@@ -1,19 +1,17 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Zapatilla;
 
 public interface ZapatillaService {
 
-    public List<Zapatilla> obtenerTodo();
+    List<Zapatilla> obtenerTodo();
 
-    public void guardar(Zapatilla zapatilla);
+    Zapatilla guardar(Zapatilla zapatilla);  // <-- ahora retorna
 
-    public Zapatilla buscarPorId(Integer id);
+    Zapatilla obtenerPorId(Integer id);      // <-- nombre corregido
 
-    public void actualizar(Zapatilla zapatilla);
+    void actualizar(Zapatilla zapatilla);
 
-    public void eliminarPorId(Integer id);
-
+    void eliminarPorId(Integer id);
 }
