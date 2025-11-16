@@ -27,10 +27,11 @@ public class CarritoItemController {
     private CarritoItemService carritoItemService;
 
     // Obtener todos los items del carrito
+    /*
     @GetMapping
     public ResponseEntity<List<Carrito_item>> getAll() {
         return ResponseEntity.ok(carritoItemService.obtenerTodo());
-    }
+    }*/
 
     // Obtener por id
     @GetMapping("/{id}")
@@ -65,6 +66,7 @@ public class CarritoItemController {
     }
 
     // Actualizar item
+    /*
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
         @PathVariable Integer id,
@@ -91,6 +93,7 @@ public class CarritoItemController {
             carritoItemService.guardar(existente);
             return ResponseEntity.ok(existente);
         }
+         */
 
     // Eliminar item
     @DeleteMapping("/{id}")

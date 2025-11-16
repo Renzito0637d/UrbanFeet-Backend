@@ -24,10 +24,12 @@ public class CarritoController {
     private CarritoService carritoService;
 
     // Obtener todos los carritos
+    
     @GetMapping
     public ResponseEntity<List<Carrito>> getAll() {
         return ResponseEntity.ok(carritoService.obtenerTodo());
     }
+    
 
     // Obtener carrito por id
     @GetMapping("/{id}")
@@ -51,6 +53,7 @@ public class CarritoController {
     }
 
     // Actualizar carrito
+    
     @PutMapping("/{id}")
     public ResponseEntity<Carrito> update(@PathVariable Integer id, @RequestBody Carrito carrito) {
         Carrito existente = carritoService.buscarPorId(id);
@@ -62,6 +65,7 @@ public class CarritoController {
         Carrito actualizado = carritoService.actualizar(carrito);
         return ResponseEntity.ok(actualizado);
     }
+    
 
     // Eliminar carrito
     @DeleteMapping("/{id}")
