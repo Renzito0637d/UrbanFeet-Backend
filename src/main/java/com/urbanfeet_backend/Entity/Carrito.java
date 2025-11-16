@@ -23,7 +23,7 @@ public class Carrito {
     private User user;
 
     @OneToMany(mappedBy = "carrito", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Carrito_item> zapatillas=new ArrayList<>();;
+    private List<Carrito_item> zapatillas=new ArrayList<>();
 
     public Carrito() {
     }
