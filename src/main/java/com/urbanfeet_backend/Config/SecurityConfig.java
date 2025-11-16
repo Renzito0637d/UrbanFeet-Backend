@@ -40,6 +40,8 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/docs/**",
                                 "/actuator/health",
+                                "/carrito/**",
+                                "/carrito-items/**",
                                 "/zapatilla")
                         .permitAll()
 

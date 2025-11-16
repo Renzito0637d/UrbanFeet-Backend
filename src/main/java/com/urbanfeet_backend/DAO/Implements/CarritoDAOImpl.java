@@ -21,8 +21,8 @@ public class CarritoDAOImpl implements CarritoDAO {
     }
 
     @Override
-    public void save(Carrito carrito) {
-        carritoRepository.save(carrito);
+    public Carrito save(Carrito carrito) {
+        return carritoRepository.save(carrito);
     }
 
     @Override
@@ -31,13 +31,12 @@ public class CarritoDAOImpl implements CarritoDAO {
     }
 
     @Override
-    public void update(Carrito carrito) {
-        carritoRepository.save(carrito);
+    public Carrito update(Carrito carrito) {
+        return carritoRepository.save(carrito);
     }
 
     @Override
     public void deleteById(Integer id) {
         carritoRepository.deleteById(id);
     }
-
 }

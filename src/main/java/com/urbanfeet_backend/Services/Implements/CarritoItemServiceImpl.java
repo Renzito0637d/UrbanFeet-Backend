@@ -6,7 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.urbanfeet_backend.DAO.Interfaces.CarritoItemDAO;
+import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
+import com.urbanfeet_backend.Entity.Zapatilla_variacion;
+import com.urbanfeet_backend.Repository.CarritoRepository;
+import com.urbanfeet_backend.Repository.Zapatilla_variacionRepository;
 import com.urbanfeet_backend.Services.Interfaces.CarritoItemService;
 
 @Service
@@ -14,6 +18,11 @@ public class CarritoItemServiceImpl implements CarritoItemService {
 
     @Autowired
     private CarritoItemDAO carritoItemDao;
+    @Autowired
+    private CarritoRepository carritoRepository;
+    @Autowired
+    private Zapatilla_variacionRepository variacionRepository;
+
 
     @Override
     public List<Carrito_item> obtenerTodo() {
@@ -38,6 +47,16 @@ public class CarritoItemServiceImpl implements CarritoItemService {
     @Override
     public void eliminarPorId(Integer id) {
         carritoItemDao.deleteById(id);
+    }
+
+    @Override
+    public Carrito buscarCarritoPorId(Integer id) {
+        return carritoRepository.findById(id).orElse(null);
+    }
+    
+    @Override
+    public Zapatilla_variacion buscarVariacionPorId(Integer id) {
+        return variacionRepository.findById(id).orElse(null);
     }
 
 }
