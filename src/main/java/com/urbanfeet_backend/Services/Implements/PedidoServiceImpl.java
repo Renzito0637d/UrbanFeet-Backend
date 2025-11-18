@@ -40,4 +40,15 @@ public class PedidoServiceImpl implements PedidoService {
         pedidoDao.deleteById(id);
     }
 
+    // Nuevo método
+    @Override
+    public List<Pedido> obtenerPedidosConDetallesPorUsuario(Integer userId) {
+        return pedidoDao.findAllWithDetallesByUserId(userId);
+    }
+
+    @Override
+    public Pedido obtenerPedidoConDetallesPorId(Integer id) {
+        return pedidoDao.findByIdWithDetalles(id);
+    }
+
 }

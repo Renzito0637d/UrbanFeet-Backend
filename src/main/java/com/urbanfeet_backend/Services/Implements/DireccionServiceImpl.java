@@ -2,47 +2,49 @@ package com.urbanfeet_backend.Services.Implements;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.urbanfeet_backend.DAO.Interfaces.DireccionDAO;
 import com.urbanfeet_backend.Entity.Direccion;
+import com.urbanfeet_backend.Repository.DireccionRepository;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
 
 @Service
 public class DireccionServiceImpl implements DireccionService {
 
-    @Autowired
-    private DireccionDAO direccionDao;
+    private final DireccionRepository direccionRepository;
+
+    public DireccionServiceImpl(DireccionRepository direccionRepository) {
+        this.direccionRepository = direccionRepository;
+    }
 
     @Override
     public List<Direccion> obtenerTodo() {
-        return direccionDao.findAll();
+        return direccionRepository.findAll();
     }
 
     @Override
     public void guardar(Direccion direccion) {
-        direccionDao.save(direccion);
+        direccionRepository.save(direccion);
     }
 
     @Override
     public Direccion buscarPorId(Integer id) {
-        return direccionDao.findById(id);
+        return direccionRepository.findById(id)
+                .orElse(null);
     }
 
     @Override
     public void actualizar(Direccion direccion) {
-        direccionDao.update(direccion);
+        direccionRepository.save(direccion);
     }
 
     @Override
     public void eliminarPorId(Integer id) {
-        direccionDao.deleteById(id);
+        direccionRepository.deleteById(id);
     }
 
     @Override
     public List<Direccion> buscarPorUsuarioId(Integer userId) {
-        return direccionDao.findByUserId(userId);
+        return direccionRepository.findByUser_Id(userId);
     }
-
 }

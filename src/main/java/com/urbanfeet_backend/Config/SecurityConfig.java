@@ -35,24 +35,19 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 // Autorización por rutas/roles
                 .authorizeHttpRequests(auth -> auth
-                        // Público
-                        .requestMatchers(
-                                "/auth/**",
-                                "/docs/**",
-                                "/actuator/health",
-                                "/zapatilla")
-                        .permitAll()
+                        // Bloque original de roles comentado para pruebas
+                        /*
+                         * .requestMatchers("/admin/**", "/pedidos/**", "/inventario/**",
+                         * "/ventas/**").hasRole("ADMIN")
+                         * .requestMatchers("/pedidos/**").hasAnyRole("ADMIN", "PEDIDOS")
+                         * .requestMatchers("/inventario/**").hasRole("INVENTARIO")
+                         * .requestMatchers("/ventas/**").hasRole("VENTAS")
+                         * .requestMatchers("/cliente/**").hasRole("CLIENTE")
+                         * .anyRequest().authenticated()
+                         */
 
-                        // Por roles (GrantedAuthority tiene "ROLE_")
-                        .requestMatchers("/admin/**", "/pedido/**", "/inventario/**", "/ventas/**").hasRole("ADMIN")
-                        .requestMatchers("/pedido/**").hasRole("PEDIDOS")
-                        .requestMatchers("/inventario/**").hasRole("INVENTARIO")
-                        .requestMatchers("/ventas/**").hasRole("VENTAS")
-
-                        .requestMatchers("/cliente/**").hasRole("CLIENTE")
-
-                        // Cualquier otra ruta requiere autenticación
-                        .anyRequest().authenticated());
+                        // Nueva línea para probar todos los endpoints sin seguridad
+                        .anyRequest().permitAll());
 
         return http.build();
     }

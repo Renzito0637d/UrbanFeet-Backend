@@ -13,31 +13,35 @@ import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 public class Pedido_detalleServiceImpl implements Pedido_detalleService {
 
     @Autowired
-    private Pedido_detalleDAO pedido_detalleDao;
+    private Pedido_detalleDAO detalleDao; // <-- Asegúrate que este nombre coincide con el DAO
 
     @Override
     public List<Pedido_detalle> obtenerTodo() {
-        return pedido_detalleDao.findAll();
+        return detalleDao.findAll();
     }
 
     @Override
-    public void guardar(Pedido_detalle pedido_detalle) {
-        pedido_detalleDao.save(pedido_detalle);
+    public void guardar(Pedido_detalle detalle) {
+        detalleDao.save(detalle);
     }
 
     @Override
     public Pedido_detalle buscarPorId(Integer id) {
-        return pedido_detalleDao.findById(id);
+        return detalleDao.findById(id);
     }
 
     @Override
-    public void actualizar(Pedido_detalle pedido_detalle) {
-        pedido_detalleDao.update(pedido_detalle);
+    public void actualizar(Pedido_detalle detalle) {
+        detalleDao.update(detalle);
     }
 
     @Override
     public void eliminarPorId(Integer id) {
-        pedido_detalleDao.deleteById(id);
+        detalleDao.deleteById(id);
     }
 
+    @Override
+    public void eliminarPorPedidoId(Integer pedidoId) {
+        detalleDao.deleteByPedidoId(pedidoId);
+    }
 }

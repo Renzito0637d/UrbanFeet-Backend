@@ -1,19 +1,22 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Pedido;
 
 public interface PedidoService {
 
-    public List<Pedido> obtenerTodo();
+    List<Pedido> obtenerTodo();
 
-    public void guardar(Pedido pedido);
+    void guardar(Pedido pedido);
 
-    public Pedido buscarPorId(Integer id);
+    Pedido buscarPorId(Integer id);
 
-    public void actualizar(Pedido pedido);
+    void actualizar(Pedido pedido);
 
-    public void eliminarPorId(Integer id);
+    void eliminarPorId(Integer id);
+
+    List<Pedido> obtenerPedidosConDetallesPorUsuario(Integer userId);
+
+    Pedido obtenerPedidoConDetallesPorId(Integer id);
 
 }
