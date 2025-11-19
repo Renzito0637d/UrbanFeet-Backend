@@ -34,8 +34,15 @@ public class DireccionController {
             String referencia) {
     }
 
+    /**
+     * Obtiene al usuario autenticado desde el JWT (email).
+     */
     private User getUser(Authentication auth) {
-        return userRepository.findById(1)
+        if (auth == null || auth.getName() == null) {
+            throw new RuntimeException("No autenticado");
+        }
+
+        return userRepository.findUserByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
@@ -43,7 +50,9 @@ public class DireccionController {
     public ResponseEntity<DireccionDTO> create(@RequestBody Direccion direccion, Authentication authentication) {
         User user = getUser(authentication);
         direccion.setUser(user);
+
         direccionService.guardar(direccion);
+
         DireccionDTO dto = new DireccionDTO(
                 direccion.getId(),
                 direccion.getCalle(),
@@ -51,12 +60,14 @@ public class DireccionController {
                 direccion.getProvincia(),
                 direccion.getDepartamento(),
                 direccion.getReferencia());
+
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping
     public ResponseEntity<List<DireccionDTO>> list(Authentication authentication) {
         User user = getUser(authentication);
+
         List<DireccionDTO> dtos = direccionService.buscarPorUsuarioId(user.getId())
                 .stream()
                 .map(d -> new DireccionDTO(
@@ -67,6 +78,7 @@ public class DireccionController {
                         d.getDepartamento(),
                         d.getReferencia()))
                 .toList();
+
         return ResponseEntity.ok(dtos);
     }
 
@@ -117,15 +129,12 @@ public class DireccionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/direccion-envio/{userId}")
-    public ResponseEntity<Direccion_envio> obtenerDireccionEnvio(@PathVariable Integer userId) {
-        // Obtener todas las direcciones del usuario
-        List<Direccion> direcciones = direccionService.buscarPorUsuarioId(userId);
-
-        // Tomar la primera si existe
+    @GetMapping("/direccion-envio")
+    public ResponseEntity<Direccion_envio> obtenerDireccionEnvio(Authentication auth) {
+        User user = getUser(auth); // método que obtiene el usuario logueado
+        List<Direccion> direcciones = direccionService.buscarPorUsuarioId(user.getId());
         Direccion primera = direcciones.stream().findFirst().orElse(null);
 
-        // Crear objeto Direccion_envio a partir de la Direccion
         Direccion_envio envio = null;
         if (primera != null) {
             envio = new Direccion_envio(

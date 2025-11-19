@@ -12,6 +12,7 @@ import com.urbanfeet_backend.Config.Auth.JwtFilter;
 
 @Configuration
 public class SecurityConfig {
+
     private final JwtFilter jwtFilter;
     private final AuthenticationProvider authenticationProvider;
 
@@ -22,34 +23,41 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {
                 })
-                // Stateless: JWT, sin sesiones del servidor
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Provider (Boot lo autoconfigura si expusiste UserDetailsService +
-                // PasswordEncoder)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                // Orden correcto del filtro JWT
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                // Autorización por rutas/roles
                 .authorizeHttpRequests(auth -> auth
-                        // Bloque original de roles comentado para pruebas
-                        /*
-                         * .requestMatchers("/admin/**", "/pedidos/**", "/inventario/**",
-                         * "/ventas/**").hasRole("ADMIN")
-                         * .requestMatchers("/pedidos/**").hasAnyRole("ADMIN", "PEDIDOS")
-                         * .requestMatchers("/inventario/**").hasRole("INVENTARIO")
-                         * .requestMatchers("/ventas/**").hasRole("VENTAS")
-                         * .requestMatchers("/cliente/**").hasRole("CLIENTE")
-                         * .anyRequest().authenticated()
-                         */
 
-                        // Nueva línea para probar todos los endpoints sin seguridad
-                        .anyRequest().permitAll());
+                        // 👉 Publico
+                        .requestMatchers("/auth/**").permitAll()
+
+                        // 👉 Rutas con roles (dejamos TODO igual)
+                        .requestMatchers("/admin/**", "/pedidos/**",
+                                "/inventario/**", "/ventas/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/pedidos/**")
+                        .hasAnyRole("ADMIN", "PEDIDOS")
+
+                        .requestMatchers("/inventario/**")
+                        .hasRole("INVENTARIO")
+
+                        .requestMatchers("/ventas/**")
+                        .hasRole("VENTAS")
+
+                        .requestMatchers("/cliente/**")
+                        .hasRole("CLIENTE")
+                        .requestMatchers("/directions/**").hasAnyRole("ADMIN", "CLIENTE")
+
+                        // 👉 Requiere autenticación
+                        .anyRequest().authenticated());
 
         return http.build();
     }
-
 }
