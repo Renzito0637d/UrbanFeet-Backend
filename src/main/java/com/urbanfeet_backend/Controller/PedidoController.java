@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
+import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -21,13 +23,18 @@ public class PedidoController {
         private final Pedido_detalleService detalleService;
         private final DireccionService direccionService;
         private final UserRepository userRepository;
+        private final Zapatilla_variacionService variacionService;
 
-        public PedidoController(PedidoService pedidoService, Pedido_detalleService detalleService,
-                        DireccionService direccionService, UserRepository userRepository) {
+        public PedidoController(PedidoService pedidoService,
+                        Pedido_detalleService detalleService,
+                        DireccionService direccionService,
+                        UserRepository userRepository,
+                        Zapatilla_variacionService variacionService) {
                 this.pedidoService = pedidoService;
                 this.detalleService = detalleService;
                 this.direccionService = direccionService;
                 this.userRepository = userRepository;
+                this.variacionService = variacionService;
         }
 
         // DTOs
@@ -51,32 +58,30 @@ public class PedidoController {
                         if (d == null)
                                 return null;
                         return new Direccion_envioDTO(d.getCalle(), d.getDistrito(), d.getProvincia(),
-                                        d.getDepartamento(),
-                                        d.getReferencia());
+                                        d.getDepartamento(), d.getReferencia());
                 }
         }
 
-        // <-- Usuario fijo para pruebas
-        private User getTestUser() {
-                return userRepository.findById(1)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        }
-
         @PostMapping
-        public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto) {
-                User user = getTestUser();
+        public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
+                // Usuario logueado
+                String email = authentication.getName();
+                User user = userRepository.findUserByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+                // Obtener primera dirección del usuario
                 Direccion direccion = direccionService.buscarPorUsuarioId(user.getId())
                                 .stream().findFirst()
                                 .orElseThrow(() -> new RuntimeException("Usuario no tiene dirección registrada"));
 
-                Direccion_envio direccion_envio = new Direccion_envio(
-                                direccion.getCalle(),
+                Direccion_envio direccion_envio = new Direccion_envio(direccion.getCalle(),
                                 direccion.getDistrito(),
                                 direccion.getProvincia(),
                                 direccion.getDepartamento(),
                                 direccion.getReferencia());
 
+                // Crear pedido
                 Pedido pedido = new Pedido();
                 pedido.setUser(user);
                 pedido.setFechaPedido(LocalDateTime.now());
@@ -84,16 +89,19 @@ public class PedidoController {
                 pedido.setDireccion_envio(direccion_envio);
                 pedidoService.guardar(pedido);
 
+                // Crear detalles del pedido
                 List<Pedido_detalle> detalles = dto.detalles().stream().map(d -> {
                         Pedido_detalle detalle = new Pedido_detalle();
                         detalle.setPedido(pedido);
 
-                        Zapatilla_variacion var = new Zapatilla_variacion();
-                        var.setId(d.zapatillaVariacionId());
-                        detalle.setZapatilla_variacion(var);
+                        Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
+                        if (variacion == null)
+                                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
+                        detalle.setZapatilla_variacion(variacion);
 
                         detalle.setCantidad(d.cantidad());
                         detalle.setPrecioTotal(d.precioTotal());
+
                         detalleService.guardar(detalle);
                         return detalle;
                 }).toList();
@@ -104,10 +112,91 @@ public class PedidoController {
                 return ResponseEntity.ok(mapToDTO(pedido));
         }
 
-        // Map a DTO
+        @GetMapping
+        public ResponseEntity<List<PedidoResponseDTO>> listarPedidos(Authentication authentication) {
+                String email = authentication.getName();
+                User user = userRepository.findUserByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+                List<Pedido> pedidos = pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId());
+
+                List<PedidoResponseDTO> pedidosDTO = pedidos.stream()
+                                .map(this::mapToDTO)
+                                .toList();
+                return ResponseEntity.ok(pedidosDTO);
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<PedidoResponseDTO> obtenerPedido(@PathVariable Integer id,
+                        Authentication authentication) {
+                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
+                if (pedido == null)
+                        throw new RuntimeException("Pedido no encontrado");
+
+                String email = authentication.getName();
+                if (!pedido.getUser().getEmail().equals(email))
+                        return ResponseEntity.status(403).build();
+
+                return ResponseEntity.ok(mapToDTO(pedido));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<PedidoResponseDTO> actualizarPedido(@PathVariable Integer id,
+                        @RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
+                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
+                if (pedido == null)
+                        throw new RuntimeException("Pedido no encontrado");
+
+                String email = authentication.getName();
+                if (!pedido.getUser().getEmail().equals(email))
+                        return ResponseEntity.status(403).build();
+
+                // Eliminar detalles anteriores
+                detalleService.eliminarPorPedidoId(pedido.getId());
+
+                // Crear nuevos detalles
+                List<Pedido_detalle> detalles = dto.detalles().stream().map(d -> {
+                        Pedido_detalle detalle = new Pedido_detalle();
+                        detalle.setPedido(pedido);
+
+                        Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
+                        if (variacion == null)
+                                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
+                        detalle.setZapatilla_variacion(variacion);
+
+                        detalle.setCantidad(d.cantidad());
+                        detalle.setPrecioTotal(d.precioTotal());
+
+                        detalleService.guardar(detalle);
+                        return detalle;
+                }).toList();
+
+                pedido.setDetalles(detalles);
+                pedidoService.actualizar(pedido);
+
+                return ResponseEntity.ok(mapToDTO(pedido));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id,
+                        Authentication authentication) {
+                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
+                if (pedido == null)
+                        throw new RuntimeException("Pedido no encontrado");
+
+                String email = authentication.getName();
+                if (!pedido.getUser().getEmail().equals(email))
+                        return ResponseEntity.status(403).build();
+
+                pedidoService.eliminarPorId(id);
+                return ResponseEntity.noContent().build();
+        }
+
         private PedidoResponseDTO mapToDTO(Pedido p) {
                 List<PedidoDetalleResponseDTO> detalles = p.getDetalles().stream()
-                                .map(d -> new PedidoDetalleResponseDTO(d.getId(),
+                                .map(d -> new PedidoDetalleResponseDTO(
+                                                d.getId(),
                                                 d.getZapatilla_variacion().getId(),
                                                 d.getCantidad(),
                                                 d.getPrecioTotal()))
@@ -121,77 +210,4 @@ public class PedidoController {
                                 Direccion_envioDTO.fromEntity(p.getDireccion_envio()),
                                 detalles);
         }
-
-        @GetMapping
-        public ResponseEntity<List<PedidoResponseDTO>> listarPedidos() {
-                User user = getTestUser();
-
-                // Ahora usamos el método que trae detalles junto con los pedidos
-                List<Pedido> pedidos = pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId());
-
-                List<PedidoResponseDTO> pedidosDTO = pedidos.stream()
-                                .map(this::mapToDTO)
-                                .toList();
-
-                return ResponseEntity.ok(pedidosDTO);
-        }
-
-        @GetMapping("/{id}")
-        public ResponseEntity<PedidoResponseDTO> obtenerPedido(@PathVariable Integer id) {
-                // Obtenemos el pedido con detalles
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-
-                if (pedido == null) {
-                        // Si no existe, lanzamos excepción
-                        throw new RuntimeException("Pedido no encontrado");
-                }
-
-                return ResponseEntity.ok(mapToDTO(pedido));
-        }
-
-        @PutMapping("/{id}")
-        public ResponseEntity<PedidoResponseDTO> actualizarPedido(@PathVariable Integer id,
-                        @RequestBody PedidoRequestDTO dto) {
-                // Obtenemos el pedido con detalles
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-
-                if (pedido == null) {
-                        throw new RuntimeException("Pedido no encontrado");
-                }
-
-                // Actualizamos los detalles (eliminar y crear de nuevo)
-                detalleService.eliminarPorPedidoId(pedido.getId());
-
-                List<Pedido_detalle> detalles = dto.detalles().stream().map(d -> {
-                        Pedido_detalle detalle = new Pedido_detalle();
-                        detalle.setPedido(pedido);
-
-                        Zapatilla_variacion var = new Zapatilla_variacion();
-                        var.setId(d.zapatillaVariacionId());
-                        detalle.setZapatilla_variacion(var);
-
-                        detalle.setCantidad(d.cantidad());
-                        detalle.setPrecioTotal(d.precioTotal());
-                        detalleService.guardar(detalle);
-                        return detalle;
-                }).toList();
-
-                pedido.setDetalles(detalles);
-                pedidoService.actualizar(pedido);
-
-                return ResponseEntity.ok(mapToDTO(pedido));
-        }
-
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id) {
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-
-                if (pedido == null) {
-                        throw new RuntimeException("Pedido no encontrado");
-                }
-
-                pedidoService.eliminarPorId(id);
-                return ResponseEntity.noContent().build();
-        }
-
 }
