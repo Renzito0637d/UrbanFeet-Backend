@@ -10,9 +10,7 @@ import org.springframework.security.core.Authentication;
 import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
-import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
-import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -20,21 +18,15 @@ import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 public class PedidoController {
 
         private final PedidoService pedidoService;
-        private final Pedido_detalleService detalleService;
         private final DireccionService direccionService;
         private final UserRepository userRepository;
-        private final Zapatilla_variacionService variacionService;
 
         public PedidoController(PedidoService pedidoService,
-                        Pedido_detalleService detalleService,
                         DireccionService direccionService,
-                        UserRepository userRepository,
-                        Zapatilla_variacionService variacionService) {
+                        UserRepository userRepository) {
                 this.pedidoService = pedidoService;
-                this.detalleService = detalleService;
                 this.direccionService = direccionService;
                 this.userRepository = userRepository;
-                this.variacionService = variacionService;
         }
 
         // DTOs
@@ -65,50 +57,16 @@ public class PedidoController {
         @PostMapping
         public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto,
                         Authentication authentication) {
-                // Usuario logueado
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                // Obtener primera dirección del usuario
                 Direccion direccion = direccionService.buscarPorUsuarioId(user.getId())
-                                .stream().findFirst()
+                                .stream()
+                                .findFirst()
                                 .orElseThrow(() -> new RuntimeException("Usuario no tiene dirección registrada"));
 
-                Direccion_envio direccion_envio = new Direccion_envio(direccion.getCalle(),
-                                direccion.getDistrito(),
-                                direccion.getProvincia(),
-                                direccion.getDepartamento(),
-                                direccion.getReferencia());
-
-                // Crear pedido
-                Pedido pedido = new Pedido();
-                pedido.setUser(user);
-                pedido.setFechaPedido(LocalDateTime.now());
-                pedido.setEstado("PENDIENTE");
-                pedido.setDireccion_envio(direccion_envio);
-                pedidoService.guardar(pedido);
-
-                // Crear detalles del pedido
-                List<Pedido_detalle> detalles = dto.detalles().stream().map(d -> {
-                        Pedido_detalle detalle = new Pedido_detalle();
-                        detalle.setPedido(pedido);
-
-                        Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
-                        if (variacion == null)
-                                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
-                        detalle.setZapatilla_variacion(variacion);
-
-                        detalle.setCantidad(d.cantidad());
-                        detalle.setPrecioTotal(d.precioTotal());
-
-                        detalleService.guardar(detalle);
-                        return detalle;
-                }).toList();
-
-                pedido.setDetalles(detalles);
-                pedidoService.actualizar(pedido);
-
+                Pedido pedido = pedidoService.crearPedido(user, direccion, dto.detalles());
                 return ResponseEntity.ok(mapToDTO(pedido));
         }
 
@@ -119,10 +77,7 @@ public class PedidoController {
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
                 List<Pedido> pedidos = pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId());
-
-                List<PedidoResponseDTO> pedidosDTO = pedidos.stream()
-                                .map(this::mapToDTO)
-                                .toList();
+                List<PedidoResponseDTO> pedidosDTO = pedidos.stream().map(this::mapToDTO).toList();
                 return ResponseEntity.ok(pedidosDTO);
         }
 
@@ -131,7 +86,7 @@ public class PedidoController {
                         Authentication authentication) {
                 Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
                 if (pedido == null)
-                        throw new RuntimeException("Pedido no encontrado");
+                        return ResponseEntity.notFound().build();
 
                 String email = authentication.getName();
                 if (!pedido.getUser().getEmail().equals(email))
@@ -142,72 +97,32 @@ public class PedidoController {
 
         @PutMapping("/{id}")
         public ResponseEntity<PedidoResponseDTO> actualizarPedido(@PathVariable Integer id,
-                        @RequestBody PedidoRequestDTO dto,
-                        Authentication authentication) {
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-                if (pedido == null)
-                        throw new RuntimeException("Pedido no encontrado");
-
+                        @RequestBody PedidoRequestDTO dto, Authentication authentication) {
                 String email = authentication.getName();
-                if (!pedido.getUser().getEmail().equals(email))
-                        return ResponseEntity.status(403).build();
+                User user = userRepository.findUserByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                // Eliminar detalles anteriores
-                detalleService.eliminarPorPedidoId(pedido.getId());
-
-                // Crear nuevos detalles
-                List<Pedido_detalle> detalles = dto.detalles().stream().map(d -> {
-                        Pedido_detalle detalle = new Pedido_detalle();
-                        detalle.setPedido(pedido);
-
-                        Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
-                        if (variacion == null)
-                                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
-                        detalle.setZapatilla_variacion(variacion);
-
-                        detalle.setCantidad(d.cantidad());
-                        detalle.setPrecioTotal(d.precioTotal());
-
-                        detalleService.guardar(detalle);
-                        return detalle;
-                }).toList();
-
-                pedido.setDetalles(detalles);
-                pedidoService.actualizar(pedido);
-
+                Pedido pedido = pedidoService.actualizarPedido(id, user, dto.detalles());
                 return ResponseEntity.ok(mapToDTO(pedido));
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id,
-                        Authentication authentication) {
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-                if (pedido == null)
-                        throw new RuntimeException("Pedido no encontrado");
-
+        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id, Authentication authentication) {
                 String email = authentication.getName();
-                if (!pedido.getUser().getEmail().equals(email))
-                        return ResponseEntity.status(403).build();
+                User user = userRepository.findUserByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                pedidoService.eliminarPorId(id);
+                pedidoService.eliminarPedido(id, user);
                 return ResponseEntity.noContent().build();
         }
 
         private PedidoResponseDTO mapToDTO(Pedido p) {
                 List<PedidoDetalleResponseDTO> detalles = p.getDetalles().stream()
-                                .map(d -> new PedidoDetalleResponseDTO(
-                                                d.getId(),
-                                                d.getZapatilla_variacion().getId(),
-                                                d.getCantidad(),
-                                                d.getPrecioTotal()))
+                                .map(d -> new PedidoDetalleResponseDTO(d.getId(), d.getZapatilla_variacion().getId(),
+                                                d.getCantidad(), d.getPrecioTotal()))
                                 .toList();
 
-                return new PedidoResponseDTO(
-                                p.getId(),
-                                p.getUser().getId(),
-                                p.getEstado(),
-                                p.getFechaPedido(),
-                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()),
-                                detalles);
+                return new PedidoResponseDTO(p.getId(), p.getUser().getId(), p.getEstado(), p.getFechaPedido(),
+                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()), detalles);
         }
 }
