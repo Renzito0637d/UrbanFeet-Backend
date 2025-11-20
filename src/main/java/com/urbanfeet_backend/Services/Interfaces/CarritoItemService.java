@@ -5,6 +5,7 @@ import java.util.List;
 import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
+import com.urbanfeet_backend.Model.CarritoItemRequest;
 
 public interface CarritoItemService {
     
@@ -21,5 +22,8 @@ public interface CarritoItemService {
     Carrito buscarCarritoPorId(Integer id);
 
     Zapatilla_variacion buscarVariacionPorId(Integer id);
+    
+    Carrito_item crearDesdeRequest(CarritoItemRequest request);
 
+    Carrito_item actualizarDesdeRequest(Integer id, CarritoItemRequest request);
 }

@@ -24,7 +24,6 @@ public class CarritoController {
     private CarritoService carritoService;
 
     // Obtener todos los carritos
-    
     @GetMapping
     public ResponseEntity<List<Carrito>> getAll() {
         return ResponseEntity.ok(carritoService.obtenerTodo());
@@ -44,28 +43,33 @@ public class CarritoController {
     // Crear nuevo carrito
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Carrito carrito) {
-        if (carrito.getUser() == null || carrito.getUser().getId() == null) {
-            return ResponseEntity.badRequest().body("Debe enviar el id del usuario.");
+        try {
+            Carrito guardado = carritoService.guardar(carrito);
+            return ResponseEntity.ok(guardado);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body("Error interno: " + ex.getMessage());
         }
-        
-        Carrito guardado = carritoService.guardar(carrito);
-        return ResponseEntity.ok(guardado);
     }
 
     // Actualizar carrito
-    
     @PutMapping("/{id}")
-    public ResponseEntity<Carrito> update(@PathVariable Integer id, @RequestBody Carrito carrito) {
-        Carrito existente = carritoService.buscarPorId(id);
-        if (existente == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody Carrito carrito) {
+        try {
+            Carrito existente = carritoService.buscarPorId(id);
+            if (existente == null) {
+                return ResponseEntity.notFound().build();
+            }
+            carrito.setId(id);
+            Carrito actualizado = carritoService.actualizar(carrito);
+            return ResponseEntity.ok(actualizado);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body("Error interno: " + ex.getMessage());
         }
-        // asegurar que el id del body coincida con el path (o forzarlo)
-        carrito.setId(id);
-        Carrito actualizado = carritoService.actualizar(carrito);
-        return ResponseEntity.ok(actualizado);
     }
-    
 
     // Eliminar carrito
     @DeleteMapping("/{id}")
