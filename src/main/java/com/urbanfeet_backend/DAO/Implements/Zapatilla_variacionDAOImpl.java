@@ -6,38 +6,60 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.DAO.Interfaces.Zapatilla_variacionDAO;
+import com.urbanfeet_backend.Entity.Zapatilla;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
+import com.urbanfeet_backend.Repository.ZapatillaRepository;
 import com.urbanfeet_backend.Repository.Zapatilla_variacionRepository;
 
 @Repository
 public class Zapatilla_variacionDAOImpl implements Zapatilla_variacionDAO {
 
     @Autowired
-    private Zapatilla_variacionRepository zapatilla_variacionRepository;
+    private Zapatilla_variacionRepository variacionRepository;
+
+    @Autowired
+    private ZapatillaRepository zapatillaRepository;
 
     @Override
     public List<Zapatilla_variacion> findAll() {
-        return zapatilla_variacionRepository.findAll();
+        return variacionRepository.findAll();
     }
 
     @Override
-    public void save(Zapatilla_variacion zapatilla_variacion) {
-        zapatilla_variacionRepository.save(zapatilla_variacion);
+    public Zapatilla_variacion save(Zapatilla_variacion variacion) {
+        return variacionRepository.save(variacion);
     }
 
     @Override
     public Zapatilla_variacion findById(Integer id) {
-        return zapatilla_variacionRepository.findById(id).orElse(null);
+        return variacionRepository.findById(id).orElse(null);
     }
 
     @Override
-    public void update(Zapatilla_variacion zapatilla_variacion) {
-        zapatilla_variacionRepository.save(zapatilla_variacion);
+    public Zapatilla_variacion update(Integer id, Zapatilla_variacion variacion) {
+        Zapatilla_variacion original = variacionRepository.findById(id).orElse(null);
+
+        if (original == null) return null;
+
+        original.setColor(variacion.getColor());
+        original.setImageUrl(variacion.getImageUrl());
+        original.setPrecio(variacion.getPrecio());
+        original.setStock(variacion.getStock());
+        original.setTalla(variacion.getTalla());
+
+        return variacionRepository.save(original);
     }
 
     @Override
     public void deleteById(Integer id) {
-        zapatilla_variacionRepository.deleteById(id);
+        variacionRepository.deleteById(id);
     }
-    
+
+    @Override
+    public List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId) {
+        Zapatilla zap = zapatillaRepository.findById(zapatillaId).orElse(null);
+        if (zap == null) return null;
+
+        return zap.getVariaciones();
+    }
 }

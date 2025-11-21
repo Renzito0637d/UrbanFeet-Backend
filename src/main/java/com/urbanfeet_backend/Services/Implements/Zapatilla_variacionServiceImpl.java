@@ -4,41 +4,67 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.urbanfeet_backend.DAO.Interfaces.Zapatilla_variacionDAO;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
+import com.urbanfeet_backend.DAO.Interfaces.ZapatillaDAO;
+import com.urbanfeet_backend.Entity.Zapatilla;
+
 
 @Service
 public class Zapatilla_variacionServiceImpl implements Zapatilla_variacionService {
 
-    
     @Autowired
-    private Zapatilla_variacionDAO zapatilla_variacionDao;
+    private Zapatilla_variacionDAO variacionDao;
+
+    @Autowired
+    private ZapatillaDAO zapatillaDao;
 
     @Override
-    public List<Zapatilla_variacion> obtenerTodo() {
-        return zapatilla_variacionDao.findAll();
+    public Zapatilla_variacion crearVariacion(Integer zapatillaId, Zapatilla_variacion variacion) {
+
+        // 1. Validar existencia de la zapatilla padre
+        Zapatilla zap = zapatillaDao.findById(zapatillaId);
+        if (zap == null) {
+            throw new RuntimeException("La zapatilla con ID " + zapatillaId + " no existe.");
+        }
+
+        // 2. Asignar relación
+        variacion.setZapatilla(zap);
+
+        // 3. Guardar
+        return variacionDao.save(variacion);
     }
 
     @Override
-    public void guardar(Zapatilla_variacion zapatilla_variacion) {
-        zapatilla_variacionDao.save(zapatilla_variacion);
+    public List<Zapatilla_variacion> obtenerTodo() {
+        return variacionDao.findAll();
+    }
+
+    @Override
+    public Zapatilla_variacion guardar(Zapatilla_variacion variacion) {
+        return variacionDao.save(variacion);
     }
 
     @Override
     public Zapatilla_variacion buscarPorId(Integer id) {
-        return zapatilla_variacionDao.findById(id);
+        return variacionDao.findById(id);
     }
 
     @Override
-    public void actualizar(Zapatilla_variacion zapatilla_variacion) {
-        zapatilla_variacionDao.update(zapatilla_variacion);
+    public Zapatilla_variacion actualizar(Integer id, Zapatilla_variacion variacion) {
+        return variacionDao.update(id, variacion);
     }
 
     @Override
     public void eliminarPorId(Integer id) {
-        zapatilla_variacionDao.deleteById(id);
+        variacionDao.deleteById(id);
     }
 
+    @Override
+    public List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId) {
+        return variacionDao.findByZapatillaId(zapatillaId);
+    }
 }

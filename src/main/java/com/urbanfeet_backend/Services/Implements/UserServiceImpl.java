@@ -6,12 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.urbanfeet_backend.Config.JwtService;
+import com.urbanfeet_backend.Config.Auth.JwtService;
+import com.urbanfeet_backend.DAO.Interfaces.CarritoDAO;
 import com.urbanfeet_backend.DAO.Interfaces.UserDAO;
+import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 import com.urbanfeet_backend.Services.Interfaces.UserService;
 
 @Service
@@ -20,11 +22,15 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final UserDAO userDAO;
 
+    @Autowired
+    private final CarritoDAO carritoDao;
+
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public UserServiceImpl(UserDAO userDAO, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UserServiceImpl(UserDAO userDAO, CarritoDAO carritoDao, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userDAO = userDAO;
+        this.carritoDao = carritoDao;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -75,6 +81,11 @@ public class UserServiceImpl implements UserService {
         var user = User.from(request, encodedPassword, RoleName.CLIENTE);
         // Guardar el nuevo usuario en la base de datos
         userDAO.guardarUser(user);
+        
+        Carrito carrito = new Carrito();
+        carrito.setUser(user);
+
+        carritoDao.save(carrito);
         // Generar un token JWT para el usuario registrado
         var jwtToken = jwtService.generateAccessToken(user);
         // Devolver el token generado dentro de un objeto AuthResponse

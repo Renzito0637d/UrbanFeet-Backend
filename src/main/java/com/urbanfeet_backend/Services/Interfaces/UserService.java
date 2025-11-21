@@ -3,8 +3,8 @@ package com.urbanfeet_backend.Services.Interfaces;
 import java.util.List;
 
 import com.urbanfeet_backend.Entity.User;
-import com.urbanfeet_backend.Model.AuthResponse;
-import com.urbanfeet_backend.Model.RegisterRequest;
+import com.urbanfeet_backend.Model.AuthDTOs.AuthResponse;
+import com.urbanfeet_backend.Model.AuthDTOs.RegisterRequest;
 
 public interface UserService {
 

@@ -8,6 +8,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.urbanfeet_backend.Config.Auth.JwtFilter;
+
 @Configuration
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
@@ -37,12 +39,18 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**",
                                 "/docs/**",
-                                "/actuator/health",
-                                "zapatilla")
+                                "/actuator/health",/*
+                                "/carrito/**", 
+                                "/carrito-items/**",*/
+                                "/zapatilla")
                         .permitAll()
 
                         // Por roles (GrantedAuthority tiene "ROLE_")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**", "/pedido/**", "/inventario/**", "/ventas/**").hasRole("ADMIN")
+                        .requestMatchers("/pedido/**").hasRole("PEDIDOS")
+                        .requestMatchers("/inventario/**").hasRole("INVENTARIO")
+                        .requestMatchers("/ventas/**").hasRole("VENTAS")
+
                         .requestMatchers("/cliente/**").hasRole("CLIENTE")
 
                         // Cualquier otra ruta requiere autenticación

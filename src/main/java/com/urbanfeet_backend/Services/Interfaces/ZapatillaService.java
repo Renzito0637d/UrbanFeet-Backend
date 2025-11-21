@@ -3,17 +3,19 @@ package com.urbanfeet_backend.Services.Interfaces;
 import java.util.List;
 
 import com.urbanfeet_backend.Entity.Zapatilla;
+import com.urbanfeet_backend.Controller.ZapatillaController.ZapatillaRequest;
 
 public interface ZapatillaService {
 
-    public List<Zapatilla> obtenerTodo();
+    Zapatilla crearZapatilla(ZapatillaRequest dto);
 
-    public void guardar(Zapatilla zapatilla);
+    Zapatilla obtenerZapatillaPorId(Integer id);
 
-    public Zapatilla buscarPorId(Integer id);
+    List<Zapatilla> obtenerTodo();
 
-    public void actualizar(Zapatilla zapatilla);
+    Zapatilla guardar(Zapatilla zapatilla);
 
-    public void eliminarPorId(Integer id);
+    Zapatilla obtenerPorId(Integer id);
 
+    void eliminarPorId(Integer id);
 }

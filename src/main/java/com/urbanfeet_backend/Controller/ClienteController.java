@@ -21,62 +21,68 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/cliente")
 public class ClienteController {
 
-    @Autowired
-    private DireccionService direccionService;
+    // REFACTORIZAR EN SERIVIOS
+    // ---------------------------------------------------------
 
-    @PostMapping("/savedireccion")
-    public ResponseEntity<Direccion> guardarDireccionDelUsuario(@RequestBody Direccion direccion,
-            Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof User) {
-            User usuarioActual = (User) principal;
+    // @Autowired
+    // private DireccionService direccionService;
 
-            // 3. Asignar el objeto Usuario a la dirección
-            direccion.setUser(usuarioActual); // o setUser(usuarioActual)
+    // @PostMapping("/savedireccion")
+    // public ResponseEntity<Direccion> guardarDireccionDelUsuario(@RequestBody Direccion direccion,
+    //         Authentication authentication) {
+    //     Object principal = authentication.getPrincipal();
+    //     if (principal instanceof User) {
+    //         User usuarioActual = (User) principal;
 
-            // 4. Guardar la dirección con la referencia al usuario
-            direccionService.guardar(direccion);
+    //         // 3. Asignar el objeto Usuario a la dirección
+    //         direccion.setUser(usuarioActual); // o setUser(usuarioActual)
 
-            return ResponseEntity.ok(direccion);
-        } else {
-            // Si el principal no es del tipo esperado, es un error del servidor
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+    //         // 4. Guardar la dirección con la referencia al usuario
+    //         direccionService.guardar(direccion);
 
-    public record DireccionRecord(
-            Integer idDireccion,
-            String calle,
-            String distrito,
-            String provincia,
-            String departamento,
-            String referencia) {
-    }
+    //         return ResponseEntity.ok(direccion);
+    //     } else {
+    //         // Si el principal no es del tipo esperado, es un error del servidor
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    //     }
+    // }
 
-    @GetMapping("/mis-direcciones")
-    public ResponseEntity<List<DireccionRecord>> obtenerDireccionesDelUsuario(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
+    // Dejar record o usar DTOs
+    // ---------------------------------------------------------
 
-        if (principal instanceof User) {
-            User usuarioActual = (User) principal;
-            Integer usuarioId = usuarioActual.getId();
+    // public record DireccionRecord(
+    //         Integer idDireccion,
+    //         String calle,
+    //         String distrito,
+    //         String provincia,
+    //         String departamento,
+    //         String referencia) {
+    // }
 
-            List<Direccion> direcciones = direccionService.buscarPorUsuarioId(usuarioId);
+    // @GetMapping("/mis-direcciones")
+    // public ResponseEntity<List<DireccionRecord>> obtenerDireccionesDelUsuario(Authentication authentication) {
+    //     Object principal = authentication.getPrincipal();
 
-            // Convertimos la lista de Entidades a una lista de Records
-            List<DireccionRecord> direccionesRecord = direcciones.stream()
-                    .map(direccion -> new DireccionRecord(
-                            direccion.getId(),
-                            direccion.getCalle(),
-                            direccion.getDistrito(),
-                            direccion.getProvincia(),
-                            direccion.getDepartamento(),
-                            direccion.getReferencia()))
-                    .toList();
+    //     if (principal instanceof User) {
+    //         User usuarioActual = (User) principal;
+    //         Integer usuarioId = usuarioActual.getId();
 
-            return ResponseEntity.ok(direccionesRecord);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+    //         List<Direccion> direcciones = direccionService.buscarPorUsuarioId(usuarioId);
+
+    //         // Convertimos la lista de Entidades a una lista de Records
+    //         List<DireccionRecord> direccionesRecord = direcciones.stream()
+    //                 .map(direccion -> new DireccionRecord(
+    //                         direccion.getId(),
+    //                         direccion.getCalle(),
+    //                         direccion.getDistrito(),
+    //                         direccion.getProvincia(),
+    //                         direccion.getDepartamento(),
+    //                         direccion.getReferencia()))
+    //                 .toList();
+
+    //         return ResponseEntity.ok(direccionesRecord);
+    //     } else {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    //     }
+    // }
 }

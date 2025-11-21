@@ -1,43 +1,49 @@
 package com.urbanfeet_backend.DAO.Implements;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.urbanfeet_backend.DAO.Interfaces.ZapatillaDAO;
 import com.urbanfeet_backend.Entity.Zapatilla;
-import com.urbanfeet_backend.Repository.ZapatillaRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Repository
+@Transactional
 public class ZapatillaDAOImpl implements ZapatillaDAO {
 
-    @Autowired
-    private ZapatillaRepository zapatillaRepository;
+    @PersistenceContext
+    private EntityManager em;
 
     @Override
     public List<Zapatilla> findAll() {
-        return zapatillaRepository.findAll();
+        return em.createQuery("SELECT z FROM Zapatilla z", Zapatilla.class)
+                 .getResultList();
     }
 
     @Override
-    public void save(Zapatilla zapatilla) {
-        zapatillaRepository.save(zapatilla);
+    public Zapatilla save(Zapatilla zapatilla) {
+        em.persist(zapatilla);
+        return zapatilla;  // retorna la entidad ya con ID
     }
 
     @Override
     public Zapatilla findById(Integer id) {
-        return zapatillaRepository.findById(id).orElse(null);
+        return em.find(Zapatilla.class, id);
     }
 
     @Override
     public void update(Zapatilla zapatilla) {
-        zapatillaRepository.save(zapatilla);
+        em.merge(zapatilla);
     }
 
     @Override
     public void deleteById(Integer id) {
-        zapatillaRepository.deleteById(id);
+        Zapatilla z = findById(id);
+        if (z != null) {
+            em.remove(z);
+        }
     }
-    
 }
