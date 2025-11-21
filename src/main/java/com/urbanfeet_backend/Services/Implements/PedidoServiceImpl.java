@@ -82,7 +82,7 @@ public class PedidoServiceImpl implements PedidoService {
             Pedido_detalle detalle = new Pedido_detalle();
             detalle.setPedido(pedido);
 
-            Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
+            Zapatilla_variacion variacion = variacionService.buscarPorId(d.zapatillaVariacionId());
             if (variacion == null)
                 throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
             detalle.setZapatilla_variacion(variacion);
@@ -118,7 +118,7 @@ public class PedidoServiceImpl implements PedidoService {
             Pedido_detalle detalle = new Pedido_detalle();
             detalle.setPedido(pedido);
 
-            Zapatilla_variacion variacion = variacionService.obtenerPorId(d.zapatillaVariacionId());
+            Zapatilla_variacion variacion = variacionService.buscarPorId(d.zapatillaVariacionId());
             if (variacion == null)
                 throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
             detalle.setZapatilla_variacion(variacion);
