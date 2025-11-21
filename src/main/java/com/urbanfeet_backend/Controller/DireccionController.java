@@ -15,7 +15,6 @@ import com.urbanfeet_backend.Services.Implements.DireccionServiceImpl;
 
 @RestController
 @RequestMapping("/directions")
-@CrossOrigin(origins = "*")
 public class DireccionController {
 
     private final DireccionServiceImpl direccionService;
