@@ -8,11 +8,11 @@ public interface CarritoService {
     
     public List<Carrito> obtenerTodo();
 
-    public void guardar(Carrito carrito);
+    public Carrito guardar(Carrito carrito);
 
     public Carrito buscarPorId(Integer id);
 
-    public void actualizar(Carrito carrito);
+    public Carrito actualizar(Carrito carrito);
 
     public void eliminarPorId(Integer id);
 }
