@@ -15,5 +15,9 @@ public interface PedidoDAO {
     public void update(Pedido pedido);
 
     public void deleteById(Integer id);
-    
+
+    List<Pedido> findAllWithDetallesByUserId(Integer userId);
+
+    Pedido findByIdWithDetalles(Integer id);
+
 }

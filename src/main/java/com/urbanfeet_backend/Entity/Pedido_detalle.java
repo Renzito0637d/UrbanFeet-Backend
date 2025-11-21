@@ -27,7 +27,8 @@ public class Pedido_detalle {
     public Pedido_detalle() {
     }
 
-    public Pedido_detalle(Integer id, Pedido pedido, Zapatilla_variacion zapatilla_variacion, Integer cantidad, Double precioTotal) {
+    public Pedido_detalle(Integer id, Pedido pedido, Zapatilla_variacion zapatilla_variacion, Integer cantidad,
+            Double precioTotal) {
         this.id = id;
         this.pedido = pedido;
         this.zapatilla_variacion = zapatilla_variacion;
@@ -74,5 +75,5 @@ public class Pedido_detalle {
     public void setPrecioTotal(Double precioTotal) {
         this.precioTotal = precioTotal;
     }
-    
+
 }

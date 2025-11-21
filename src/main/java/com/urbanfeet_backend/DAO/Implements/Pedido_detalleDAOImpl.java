@@ -40,4 +40,16 @@ public class Pedido_detalleDAOImpl implements Pedido_detalleDAO {
         pedido_detalleRepository.deleteById(id);
     }
 
+    @Override
+    public void deleteByPedidoId(Integer pedidoId) {
+        // Busca los detalles de ese pedido
+        List<Pedido_detalle> detalles = pedido_detalleRepository.findByPedidoId(pedidoId);
+        // Elimina todos los detalles encontrados
+        pedido_detalleRepository.deleteAll(detalles);
+    }
+
+    @Override
+    public List<Pedido_detalle> findByPedidoId(Integer pedidoId) {
+        return pedido_detalleRepository.findByPedidoId(pedidoId);
+    }
 }

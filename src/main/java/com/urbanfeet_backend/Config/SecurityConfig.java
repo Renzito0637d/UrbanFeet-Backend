@@ -39,9 +39,16 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**",
                                 "/docs/**",
+<<<<<<< HEAD
+                                "/actuator/health", /*
+                                                     * "/carrito/**",
+                                                     * "/carrito-items/**",
+                                                     */
+=======
                                 "/actuator/health",/*
                                 "/carrito/**", 
                                 "/carrito-items/**",*/
+>>>>>>> dev
                                 "/zapatilla")
                         .permitAll()
 

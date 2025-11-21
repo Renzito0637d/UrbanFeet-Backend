@@ -1,21 +1,20 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Direccion;
 
 public interface DireccionService {
 
-    public List<Direccion> obtenerTodo();
+    List<Direccion> obtenerTodo();
 
-    public void guardar(Direccion direccion);
+    void guardar(Direccion direccion);
 
-    public Direccion buscarPorId(Integer id);
+    Direccion buscarPorId(Integer id);
 
-    public void actualizar(Direccion direccion);
+    void actualizar(Direccion direccion);
 
-    public void eliminarPorId(Integer id);
+    void eliminarPorId(Integer id);
 
-    public List<Direccion> buscarPorUsuarioId(Integer userId);
+    List<Direccion> buscarPorUsuarioId(Integer userId);
 
 }
