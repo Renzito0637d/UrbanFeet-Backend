@@ -1,19 +1,21 @@
 package com.urbanfeet_backend.DAO.Interfaces;
 
 import java.util.List;
-
 import com.urbanfeet_backend.Entity.Pedido_detalle;
 
 public interface Pedido_detalleDAO {
 
-    public List<Pedido_detalle> findAll();
+    List<Pedido_detalle> findAll();
 
-    public void save(Pedido_detalle pedido_detalle);
+    void save(Pedido_detalle pedido_detalle);
 
-    public Pedido_detalle findById(Integer id);
+    Pedido_detalle findById(Integer id);
 
-    public void update(Pedido_detalle pedido_detalle);
+    void update(Pedido_detalle pedido_detalle);
 
-    public void deleteById(Integer id);
+    void deleteById(Integer id);
 
+    void deleteByPedidoId(Integer pedidoId);
+
+    List<Pedido_detalle> findByPedidoId(Integer pedidoId);
 }
