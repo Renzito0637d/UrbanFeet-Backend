@@ -26,4 +26,10 @@ public interface CarritoItemService {
     Carrito_item crearDesdeRequest(CarritoItemRequest request);
 
     Carrito_item actualizarDesdeRequest(Integer id, CarritoItemRequest request);
+
+    Carrito obtenerCarritoDelUsuario(String authHeader);
+
+    Carrito_item crearOIncrementarDesdeRequest(CarritoItemRequest request, String authHeader);
+
+    Carrito_item modificarCantidad(Integer id, boolean incrementar);
 }
