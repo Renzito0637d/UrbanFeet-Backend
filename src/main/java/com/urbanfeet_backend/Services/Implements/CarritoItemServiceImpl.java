@@ -167,7 +167,7 @@ public class CarritoItemServiceImpl implements CarritoItemService {
         }
 
         // Buscar item existente (carrito + variación)
-        Optional<Carrito_item> existenteOpt = carritoItemRepository.findByCarritoAndZapatilla_variacion(carrito, variacion);
+        Optional<Carrito_item> existenteOpt = carritoItemRepository.findByCarritoAndZapatillaVariacion(carrito, variacion);
 
         if (existenteOpt.isPresent()) {
             // Incrementa cantidad +1
