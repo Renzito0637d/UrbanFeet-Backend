@@ -29,44 +29,145 @@ public class PedidoController {
                 this.userRepository = userRepository;
         }
 
-        // DTOs
-        public record PedidoRequestDTO(List<PedidoDetalleRequestDTO> detalles) {
-        }
+        // ==================
+        // DTOs (sin record)
+        // ==================
 
-        public record PedidoDetalleRequestDTO(Integer zapatillaVariacionId, Integer cantidad, Double precioTotal) {
-        }
+        public static class PedidoRequestDTO {
+                private Integer direccionId;
+                private List<PedidoDetalleRequestDTO> detalles;
 
-        public record PedidoResponseDTO(Integer id, Integer userId, String estado, LocalDateTime fechaPedido,
-                        Direccion_envioDTO direccion_envio, List<PedidoDetalleResponseDTO> detalles) {
-        }
+                public Integer getDireccionId() {
+                        return direccionId;
+                }
 
-        public record PedidoDetalleResponseDTO(Integer id, Integer zapatillaVariacionId, Integer cantidad,
-                        Double precioTotal) {
-        }
+                public void setDireccionId(Integer direccionId) {
+                        this.direccionId = direccionId;
+                }
 
-        public record Direccion_envioDTO(String calle, String distrito, String provincia, String departamento,
-                        String referencia) {
-                public static Direccion_envioDTO fromEntity(Direccion_envio d) {
-                        if (d == null)
-                                return null;
-                        return new Direccion_envioDTO(d.getCalle(), d.getDistrito(), d.getProvincia(),
-                                        d.getDepartamento(), d.getReferencia());
+                public List<PedidoDetalleRequestDTO> getDetalles() {
+                        return detalles;
+                }
+
+                public void setDetalles(List<PedidoDetalleRequestDTO> detalles) {
+                        this.detalles = detalles;
                 }
         }
 
+        public static class PedidoDetalleRequestDTO {
+                private Integer zapatillaVariacionId;
+                private Integer cantidad;
+                private Double precioTotal;
+
+                public Integer getZapatillaVariacionId() {
+                        return zapatillaVariacionId;
+                }
+
+                public void setZapatillaVariacionId(Integer zapatillaVariacionId) {
+                        this.zapatillaVariacionId = zapatillaVariacionId;
+                }
+
+                public Integer getCantidad() {
+                        return cantidad;
+                }
+
+                public void setCantidad(Integer cantidad) {
+                        this.cantidad = cantidad;
+                }
+
+                public Double getPrecioTotal() {
+                        return precioTotal;
+                }
+
+                public void setPrecioTotal(Double precioTotal) {
+                        this.precioTotal = precioTotal;
+                }
+        }
+
+        public static class PedidoResponseDTO {
+                public Integer id;
+                public Integer userId;
+                public String estado;
+                public LocalDateTime fechaPedido;
+                public Direccion_envioDTO direccion_envio;
+                public List<PedidoDetalleResponseDTO> detalles;
+
+                public PedidoResponseDTO(Integer id, Integer userId, String estado,
+                                LocalDateTime fechaPedido,
+                                Direccion_envioDTO direccion_envio,
+                                List<PedidoDetalleResponseDTO> detalles) {
+                        this.id = id;
+                        this.userId = userId;
+                        this.estado = estado;
+                        this.fechaPedido = fechaPedido;
+                        this.direccion_envio = direccion_envio;
+                        this.detalles = detalles;
+                }
+        }
+
+        public static class PedidoDetalleResponseDTO {
+                public Integer id;
+                public Integer zapatillaVariacionId;
+                public Integer cantidad;
+                public Double precioTotal;
+
+                public PedidoDetalleResponseDTO(Integer id, Integer zapatillaVariacionId,
+                                Integer cantidad, Double precioTotal) {
+                        this.id = id;
+                        this.zapatillaVariacionId = zapatillaVariacionId;
+                        this.cantidad = cantidad;
+                        this.precioTotal = precioTotal;
+                }
+        }
+
+        public static class Direccion_envioDTO {
+                public String calle;
+                public String distrito;
+                public String provincia;
+                public String departamento;
+                public String referencia;
+
+                public Direccion_envioDTO(String calle, String distrito, String provincia,
+                                String departamento, String referencia) {
+                        this.calle = calle;
+                        this.distrito = distrito;
+                        this.provincia = provincia;
+                        this.departamento = departamento;
+                        this.referencia = referencia;
+                }
+
+                public static Direccion_envioDTO fromEntity(Direccion_envio d) {
+                        if (d == null)
+                                return null;
+                        return new Direccion_envioDTO(
+                                        d.getCalle(),
+                                        d.getDistrito(),
+                                        d.getProvincia(),
+                                        d.getDepartamento(),
+                                        d.getReferencia());
+                }
+        }
+
+        // ==================
+        // ENDPOINTS
+        // ==================
+
         @PostMapping
-        public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto,
-                        Authentication authentication) {
+        public ResponseEntity<PedidoResponseDTO> crearPedido(
+                        @RequestBody PedidoRequestDTO dto, Authentication authentication) {
+
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                Direccion direccion = direccionService.buscarPorUsuarioId(user.getId())
-                                .stream()
-                                .findFirst()
-                                .orElseThrow(() -> new RuntimeException("Usuario no tiene dirección registrada"));
+                Direccion direccion = direccionService.buscarPorId(dto.getDireccionId());
+                if (direccion == null)
+                        throw new RuntimeException("La dirección no existe");
 
-                Pedido pedido = pedidoService.crearPedido(user, direccion, dto.detalles());
+                if (!direccion.getUser().getId().equals(user.getId()))
+                        throw new RuntimeException("Esa dirección no pertenece al usuario");
+
+                Pedido pedido = pedidoService.crearPedido(user, direccion, dto.getDetalles());
                 return ResponseEntity.ok(mapToDTO(pedido));
         }
 
@@ -84,6 +185,7 @@ public class PedidoController {
         @GetMapping("/{id}")
         public ResponseEntity<PedidoResponseDTO> obtenerPedido(@PathVariable Integer id,
                         Authentication authentication) {
+
                 Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
                 if (pedido == null)
                         return ResponseEntity.notFound().build();
@@ -97,17 +199,20 @@ public class PedidoController {
 
         @PutMapping("/{id}")
         public ResponseEntity<PedidoResponseDTO> actualizarPedido(@PathVariable Integer id,
-                        @RequestBody PedidoRequestDTO dto, Authentication authentication) {
+                        @RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
+
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                Pedido pedido = pedidoService.actualizarPedido(id, user, dto.detalles());
+                Pedido pedido = pedidoService.actualizarPedido(id, user, dto.getDetalles());
                 return ResponseEntity.ok(mapToDTO(pedido));
         }
 
         @DeleteMapping("/{id}")
         public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id, Authentication authentication) {
+
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -117,12 +222,21 @@ public class PedidoController {
         }
 
         private PedidoResponseDTO mapToDTO(Pedido p) {
+
                 List<PedidoDetalleResponseDTO> detalles = p.getDetalles().stream()
-                                .map(d -> new PedidoDetalleResponseDTO(d.getId(), d.getZapatilla_variacion().getId(),
-                                                d.getCantidad(), d.getPrecioTotal()))
+                                .map(d -> new PedidoDetalleResponseDTO(
+                                                d.getId(),
+                                                d.getZapatilla_variacion().getId(),
+                                                d.getCantidad(),
+                                                d.getPrecioTotal()))
                                 .toList();
 
-                return new PedidoResponseDTO(p.getId(), p.getUser().getId(), p.getEstado(), p.getFechaPedido(),
-                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()), detalles);
+                return new PedidoResponseDTO(
+                                p.getId(),
+                                p.getUser().getId(),
+                                p.getEstado(),
+                                p.getFechaPedido(),
+                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()),
+                                detalles);
         }
 }
