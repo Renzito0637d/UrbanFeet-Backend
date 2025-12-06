@@ -13,6 +13,6 @@ import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 @Repository
 public interface CarritoItemRepository extends JpaRepository<Carrito_item, Integer> {
     List<Carrito_item> findByCarrito(Carrito carrito);
-    Optional<Carrito_item> findByCarritoAndZapatilla_variacion(Carrito carrito, Zapatilla_variacion variacion);
+    Optional<Carrito_item> findByCarritoAndZapatillaVariacion(Carrito carrito, Zapatilla_variacion variacion);
 
 }
