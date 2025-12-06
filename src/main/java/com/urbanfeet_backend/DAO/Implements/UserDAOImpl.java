@@ -4,11 +4,15 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.urbanfeet_backend.DAO.Interfaces.UserDAO;
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
+import com.urbanfeet_backend.Entity.Enum.RoleName;
+import com.urbanfeet_backend.Model.UserDTOs.UserResponse;
 import com.urbanfeet_backend.Repository.UserRepository;
 
 @Repository
@@ -33,8 +37,8 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public void actualizarUser(User User) {
-        userRepository.save(User);
+    public User actualizarUser(User User) {
+        return userRepository.save(User);
     }
 
     @Override
@@ -51,6 +55,23 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public Optional<User> buscarPorNumeroDocumento(DocumentType documentType, String documentNumber) {
         return userRepository.findByDocumentTypeAndDocumentNumber(documentType, documentNumber);
+    }
+
+    @Override
+    public Page<UserResponse> listarPorRol(RoleName role, Pageable pageable) {
+        // 1. Obtenemos la página de Entidades
+        Page<User> usersPage = userRepository.findByRoles(role, pageable);
+        // 2. Convertimos cada Entidad a DTO usando el método map() y nuestra función
+        // fromEntity
+        return usersPage.map(UserResponse::fromEntity);
+    }
+
+    @Override
+    public Page<UserResponse> listarNoClientes(Pageable pageable) {
+        // 1. Obtenemos la página de Entidades
+        Page<User> usersPage = userRepository.findByRolesNotMember(RoleName.CLIENTE, pageable);
+        // 2. Convertimos a DTO
+        return usersPage.map(UserResponse::fromEntity);
     }
 
 }

@@ -1,23 +1,17 @@
-package com.urbanfeet_backend.Model.AuthDTOs;
+package com.urbanfeet_backend.Model.UserDTOs;
 
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
 
-public class RegisterRequest {
-
+public class UserUpdateRequest {
     private String nombre;
     private String apellido;
-    private String email;
     private String phone;
-    private String password;
     private DocumentType documentType;
     private String documentNumber;
-
     private RoleName role;
 
-    public RegisterRequest() {
-    }
-
+    // Getters y Setters
     public String getNombre() {
         return nombre;
     }
@@ -34,28 +28,12 @@ public class RegisterRequest {
         this.apellido = apellido;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPhone() {
         return phone;
     }
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public DocumentType getDocumentType() {
@@ -81,17 +59,4 @@ public class RegisterRequest {
     public void setRole(RoleName role) {
         this.role = role;
     }
-
-    public RegisterRequest(String nombre, String apellido, String email, String phone, String password,
-            DocumentType documentType, String documentNumber,RoleName role) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.phone = phone;
-        this.password = password;
-        this.documentType = documentType;
-        this.documentNumber = documentNumber;
-        this.role=role;
-    }
-
 }
