@@ -11,6 +11,7 @@ import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
+import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -59,11 +60,9 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoDao.findByIdWithDetalles(id);
     }
 
-    // ---------------- Lógica de negocio ----------------
-
     @Override
     public Pedido crearPedido(User user, Direccion direccion,
-            List<com.urbanfeet_backend.Controller.PedidoController.PedidoDetalleRequestDTO> detallesDTO) {
+            List<PedidoDetalleRequestDTO> detallesDTO) {
 
         Pedido pedido = new Pedido();
         pedido.setUser(user);
@@ -102,7 +101,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public Pedido actualizarPedido(Integer id, User user,
-            List<com.urbanfeet_backend.Controller.PedidoController.PedidoDetalleRequestDTO> detallesDTO) {
+            List<PedidoDetalleRequestDTO> detallesDTO) {
 
         Pedido pedido = this.obtenerPedidoConDetallesPorId(id);
         if (pedido == null)

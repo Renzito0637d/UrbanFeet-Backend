@@ -1,6 +1,5 @@
 package com.urbanfeet_backend.Controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -11,6 +10,13 @@ import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
+
+// Importar los DTOs
+import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
+import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
+import com.urbanfeet_backend.Model.DTOs.PedidoDetalleResponseDTO;
+import com.urbanfeet_backend.Model.DTOs.DireccionEnvioDTO;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -29,132 +35,9 @@ public class PedidoController {
                 this.userRepository = userRepository;
         }
 
-        // ==================
-        // DTOs (sin record)
-        // ==================
-
-        public static class PedidoRequestDTO {
-                private Integer direccionId;
-                private List<PedidoDetalleRequestDTO> detalles;
-
-                public Integer getDireccionId() {
-                        return direccionId;
-                }
-
-                public void setDireccionId(Integer direccionId) {
-                        this.direccionId = direccionId;
-                }
-
-                public List<PedidoDetalleRequestDTO> getDetalles() {
-                        return detalles;
-                }
-
-                public void setDetalles(List<PedidoDetalleRequestDTO> detalles) {
-                        this.detalles = detalles;
-                }
-        }
-
-        public static class PedidoDetalleRequestDTO {
-                private Integer zapatillaVariacionId;
-                private Integer cantidad;
-                private Double precioTotal;
-
-                public Integer getZapatillaVariacionId() {
-                        return zapatillaVariacionId;
-                }
-
-                public void setZapatillaVariacionId(Integer zapatillaVariacionId) {
-                        this.zapatillaVariacionId = zapatillaVariacionId;
-                }
-
-                public Integer getCantidad() {
-                        return cantidad;
-                }
-
-                public void setCantidad(Integer cantidad) {
-                        this.cantidad = cantidad;
-                }
-
-                public Double getPrecioTotal() {
-                        return precioTotal;
-                }
-
-                public void setPrecioTotal(Double precioTotal) {
-                        this.precioTotal = precioTotal;
-                }
-        }
-
-        public static class PedidoResponseDTO {
-                public Integer id;
-                public Integer userId;
-                public String estado;
-                public LocalDateTime fechaPedido;
-                public Direccion_envioDTO direccion_envio;
-                public List<PedidoDetalleResponseDTO> detalles;
-
-                public PedidoResponseDTO(Integer id, Integer userId, String estado,
-                                LocalDateTime fechaPedido,
-                                Direccion_envioDTO direccion_envio,
-                                List<PedidoDetalleResponseDTO> detalles) {
-                        this.id = id;
-                        this.userId = userId;
-                        this.estado = estado;
-                        this.fechaPedido = fechaPedido;
-                        this.direccion_envio = direccion_envio;
-                        this.detalles = detalles;
-                }
-        }
-
-        public static class PedidoDetalleResponseDTO {
-                public Integer id;
-                public Integer zapatillaVariacionId;
-                public Integer cantidad;
-                public Double precioTotal;
-
-                public PedidoDetalleResponseDTO(Integer id, Integer zapatillaVariacionId,
-                                Integer cantidad, Double precioTotal) {
-                        this.id = id;
-                        this.zapatillaVariacionId = zapatillaVariacionId;
-                        this.cantidad = cantidad;
-                        this.precioTotal = precioTotal;
-                }
-        }
-
-        public static class Direccion_envioDTO {
-                public String calle;
-                public String distrito;
-                public String provincia;
-                public String departamento;
-                public String referencia;
-
-                public Direccion_envioDTO(String calle, String distrito, String provincia,
-                                String departamento, String referencia) {
-                        this.calle = calle;
-                        this.distrito = distrito;
-                        this.provincia = provincia;
-                        this.departamento = departamento;
-                        this.referencia = referencia;
-                }
-
-                public static Direccion_envioDTO fromEntity(Direccion_envio d) {
-                        if (d == null)
-                                return null;
-                        return new Direccion_envioDTO(
-                                        d.getCalle(),
-                                        d.getDistrito(),
-                                        d.getProvincia(),
-                                        d.getDepartamento(),
-                                        d.getReferencia());
-                }
-        }
-
-        // ==================
-        // ENDPOINTS
-        // ==================
-
         @PostMapping
-        public ResponseEntity<PedidoResponseDTO> crearPedido(
-                        @RequestBody PedidoRequestDTO dto, Authentication authentication) {
+        public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
 
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
@@ -173,12 +56,16 @@ public class PedidoController {
 
         @GetMapping
         public ResponseEntity<List<PedidoResponseDTO>> listarPedidos(Authentication authentication) {
+
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
                 List<Pedido> pedidos = pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId());
-                List<PedidoResponseDTO> pedidosDTO = pedidos.stream().map(this::mapToDTO).toList();
+                List<PedidoResponseDTO> pedidosDTO = pedidos.stream()
+                                .map(this::mapToDTO)
+                                .toList();
+
                 return ResponseEntity.ok(pedidosDTO);
         }
 
@@ -211,7 +98,8 @@ public class PedidoController {
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id, Authentication authentication) {
+        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id,
+                        Authentication authentication) {
 
                 String email = authentication.getName();
                 User user = userRepository.findUserByEmail(email)
@@ -236,7 +124,7 @@ public class PedidoController {
                                 p.getUser().getId(),
                                 p.getEstado(),
                                 p.getFechaPedido(),
-                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()),
+                                DireccionEnvioDTO.fromEntity(p.getDireccion_envio()),
                                 detalles);
         }
 }
