@@ -15,5 +15,7 @@ public interface Pedido_detalleService {
     public void actualizar(Pedido_detalle pedido_detalle);
 
     public void eliminarPorId(Integer id);
-    
+
+    void eliminarPorPedidoId(Integer pedidoId);
+
 }
