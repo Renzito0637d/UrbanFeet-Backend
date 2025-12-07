@@ -142,7 +142,7 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         user.setDocumentType(request.getDocumentType());
         user.setDocumentNumber(request.getDocumentNumber());
-        
+
         // 3. Lógica para actualizar ROL (Solo para internos)
         // Verificamos que se envíe un rol Y que el usuario actual NO sea un cliente.
         if (request.getRole() != null && !user.getRoles().contains(RoleName.CLIENTE)) {
@@ -150,11 +150,27 @@ public class UserServiceImpl implements UserService {
             user.getRoles().add(request.getRole());
         }
 
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            // Opcional: validar unicidad aquí
+            user.setEmail(request.getEmail());
+        }
+
         // 4. Guardar cambios
         User userActualizado = userDAO.actualizarUser(user);
 
         // 5. Devolver DTO
         return UserResponse.fromEntity(userActualizado);
+    }
+
+    @Override
+    public void changePassword(Integer id, String newPassword) {
+        User user = userDAO.obtenerUserPorId(id);
+        if (user == null)
+            throw new RuntimeException("Usuario no encontrado");
+
+        // Encriptamos la nueva contraseña
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userDAO.actualizarUser(user);
     }
 
 }
