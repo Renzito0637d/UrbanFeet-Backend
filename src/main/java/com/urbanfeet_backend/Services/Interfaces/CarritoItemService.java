@@ -2,6 +2,8 @@ package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+
 import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
@@ -22,14 +24,10 @@ public interface CarritoItemService {
     Carrito buscarCarritoPorId(Integer id);
 
     Zapatilla_variacion buscarVariacionPorId(Integer id);
-    
-    Carrito_item crearDesdeRequest(CarritoItemRequest request);
 
-    Carrito_item actualizarDesdeRequest(Integer id, CarritoItemRequest request);
+    Carrito obtenerCarritoDelUsuario(Authentication auth);
 
-    Carrito obtenerCarritoDelUsuario(String authHeader);
-
-    Carrito_item crearOIncrementarDesdeRequest(CarritoItemRequest request, String authHeader);
+    Carrito_item crearOIncrementarDesdeRequest(CarritoItemRequest request, Authentication auth);
 
     Carrito_item modificarCantidad(Integer id, boolean incrementar);
 }

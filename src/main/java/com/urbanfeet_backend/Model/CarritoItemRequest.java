@@ -2,17 +2,8 @@ package com.urbanfeet_backend.Model;
 
 public class CarritoItemRequest {
     
-    private Integer carritoId;
     private Integer zapatillaVariacionId;
     private Integer cantidad;
-
-    public Integer getCarritoId() {
-        return carritoId;
-    }
-
-    public void setCarritoId(Integer carritoId) {
-        this.carritoId = carritoId;
-    }
 
     public Integer getZapatillaVariacionId() {
         return zapatillaVariacionId;
