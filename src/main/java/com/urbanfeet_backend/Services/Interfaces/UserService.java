@@ -34,4 +34,6 @@ public interface UserService {
 
     public UserResponse updateUser(Integer id, UserUpdateRequest request);
 
+    public void changePassword(Integer id, String newPassword);
+
 }
