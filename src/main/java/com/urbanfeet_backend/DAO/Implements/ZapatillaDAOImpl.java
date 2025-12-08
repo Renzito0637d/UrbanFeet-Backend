@@ -35,8 +35,8 @@ public class ZapatillaDAOImpl implements ZapatillaDAO {
     }
 
     @Override
-    public void update(Zapatilla zapatilla) {
-        em.merge(zapatilla);
+    public Zapatilla update(Zapatilla zapatilla) {
+        return em.merge(zapatilla);
     }
 
     @Override

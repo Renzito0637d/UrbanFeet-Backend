@@ -11,7 +11,7 @@ public interface ZapatillaDAO {
 
     Zapatilla findById(Integer id);
 
-    void update(Zapatilla zapatilla);
+    Zapatilla update(Zapatilla zapatilla);
 
     void deleteById(Integer id);
 }
