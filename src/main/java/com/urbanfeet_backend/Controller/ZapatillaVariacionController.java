@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionRequest;
 import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionResponse;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionUpdateRequest;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 
 import jakarta.validation.Valid;
@@ -20,10 +21,10 @@ public class ZapatillaVariacionController {
     private Zapatilla_variacionService variacionService;
 
     @PostMapping("/zapatilla/{zapatillaId}")
-    public ResponseEntity<VariacionResponse> crearVariacion(
+    public ResponseEntity<List<VariacionResponse>> crearVariacion(
             @PathVariable Integer zapatillaId,
             @Valid @RequestBody VariacionRequest request) {
-
+        
         return ResponseEntity.ok(variacionService.crearVariacion(zapatillaId, request));
     }
 
@@ -37,7 +38,7 @@ public class ZapatillaVariacionController {
     @PutMapping("/{id}")
     public ResponseEntity<VariacionResponse> actualizarVariacion(
             @PathVariable Integer id,
-            @Valid @RequestBody VariacionRequest request) {
+            @Valid @RequestBody VariacionUpdateRequest request) {
 
         return ResponseEntity.ok(variacionService.actualizar(id, request));
     }

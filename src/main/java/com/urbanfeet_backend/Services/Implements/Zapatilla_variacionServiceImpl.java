@@ -1,5 +1,6 @@
 package com.urbanfeet_backend.Services.Implements;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import com.urbanfeet_backend.DAO.Interfaces.Zapatilla_variacionDAO;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionRequest;
 import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionResponse;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionUpdateRequest;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 import com.urbanfeet_backend.DAO.Interfaces.ZapatillaDAO;
 import com.urbanfeet_backend.Entity.Zapatilla;
@@ -26,23 +28,37 @@ public class Zapatilla_variacionServiceImpl implements Zapatilla_variacionServic
 
     @Override
     @Transactional
-    public VariacionResponse crearVariacion(Integer zapatillaId, VariacionRequest request) {
-        Zapatilla zap = zapatillaDao.findById(zapatillaId); // Asegúrate que tu DAO devuelva null si no existe o
-                                                            // Optional
+    public List<VariacionResponse> crearVariacion(Integer zapatillaId, VariacionRequest request) {
+        Zapatilla zap = zapatillaDao.findById(zapatillaId);
         if (zap == null) {
-            throw new RuntimeException("La zapatilla con ID " + zapatillaId + " no existe.");
+            throw new RuntimeException("La zapatilla no existe.");
         }
 
-        Zapatilla_variacion variacion = new Zapatilla_variacion();
-        variacion.setColor(request.color());
-        variacion.setTalla(request.talla());
-        variacion.setPrecio(request.precio());
-        variacion.setStock(request.stock());
-        variacion.setImageUrl(request.imageUrl());
-        variacion.setZapatilla(zap); // Relación
+        List<Zapatilla_variacion> nuevasVariaciones = new ArrayList<>();
 
-        Zapatilla_variacion guardada = variacionDao.save(variacion);
-        return mapToDto(guardada);
+        // BUCLE: Creamos una variación por cada talla en la lista
+        for (String talla : request.tallas()) {
+            Zapatilla_variacion variacion = new Zapatilla_variacion();
+            variacion.setZapatilla(zap);
+            variacion.setColor(request.color());
+            variacion.setPrecio(request.precio());
+            variacion.setStock(request.stock()); // Asigna el mismo stock inicial a todas
+            variacion.setImageUrl(request.imageUrl());
+
+            // Lo único que cambia es la talla
+            variacion.setTalla(talla);
+
+            nuevasVariaciones.add(variacion);
+        }
+
+        List<VariacionResponse> respuestas = new ArrayList<>();
+
+        for (Zapatilla_variacion v : nuevasVariaciones) {
+            Zapatilla_variacion guardada = variacionDao.save(v);
+            respuestas.add(mapToDto(guardada));
+        }
+
+        return respuestas;
     }
 
     @Override
@@ -62,9 +78,10 @@ public class Zapatilla_variacionServiceImpl implements Zapatilla_variacionServic
 
     @Override
     @Transactional
-    public VariacionResponse actualizar(Integer id, VariacionRequest request) {
+    public VariacionResponse actualizar(Integer id, VariacionUpdateRequest request) {
         Zapatilla_variacion v = variacionDao.findById(id);
-        if (v == null) throw new RuntimeException("Variación no encontrada");
+        if (v == null)
+            throw new RuntimeException("Variación no encontrada");
 
         v.setColor(request.color());
         v.setTalla(request.talla());
@@ -93,13 +110,12 @@ public class Zapatilla_variacionServiceImpl implements Zapatilla_variacionServic
 
     private VariacionResponse mapToDto(Zapatilla_variacion v) {
         return new VariacionResponse(
-            v.getId(),
-            v.getColor(),
-            v.getImageUrl(),
-            v.getPrecio(),
-            v.getStock(),
-            v.getTalla(),
-            v.getZapatilla().getId()
-        );
+                v.getId(),
+                v.getColor(),
+                v.getImageUrl(),
+                v.getPrecio(),
+                v.getStock(),
+                v.getTalla(),
+                v.getZapatilla().getId());
     }
 }
