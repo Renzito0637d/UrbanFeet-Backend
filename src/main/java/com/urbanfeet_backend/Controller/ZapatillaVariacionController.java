@@ -3,10 +3,14 @@ package com.urbanfeet_backend.Controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.urbanfeet_backend.Entity.Zapatilla_variacion;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionRequest;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionResponse;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/zapatilla-variacion")
@@ -15,16 +19,33 @@ public class ZapatillaVariacionController {
     @Autowired
     private Zapatilla_variacionService variacionService;
 
-    @PostMapping("/zapatillas/{zapatillaId}/variaciones")
-    public Zapatilla_variacion crearVariacion(
+    @PostMapping("/zapatilla/{zapatillaId}")
+    public ResponseEntity<VariacionResponse> crearVariacion(
             @PathVariable Integer zapatillaId,
-            @RequestBody Zapatilla_variacion variacion) {
+            @Valid @RequestBody VariacionRequest request) {
 
-        return variacionService.crearVariacion(zapatillaId, variacion);
+        return ResponseEntity.ok(variacionService.crearVariacion(zapatillaId, request));
     }
 
-    @GetMapping("/zapatillas/{zapatillaId}/variaciones")
-    public List<Zapatilla_variacion> obtenerVariaciones(@PathVariable Integer zapatillaId) {
-        return variacionService.findByZapatillaId(zapatillaId);
+    // LISTAR POR ZAPATILLA
+    @GetMapping("/zapatillas/{zapatillaId}")
+    public ResponseEntity<List<VariacionResponse>> obtenerVariaciones(@PathVariable Integer zapatillaId) {
+        return ResponseEntity.ok(variacionService.findByZapatillaId(zapatillaId));
+    }
+
+    // ACTUALIZAR (Nuevo endpoint)
+    @PutMapping("/{id}")
+    public ResponseEntity<VariacionResponse> actualizarVariacion(
+            @PathVariable Integer id,
+            @Valid @RequestBody VariacionRequest request) {
+
+        return ResponseEntity.ok(variacionService.actualizar(id, request));
+    }
+
+    // ELIMINAR
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarVariacion(@PathVariable Integer id) {
+        variacionService.eliminarPorId(id);
+        return ResponseEntity.noContent().build();
     }
 }
