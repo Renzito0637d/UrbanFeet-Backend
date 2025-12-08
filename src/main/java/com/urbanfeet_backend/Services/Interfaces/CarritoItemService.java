@@ -8,6 +8,7 @@ import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
 import com.urbanfeet_backend.Model.CarritoItemRequest;
+import com.urbanfeet_backend.Model.CarritoItemResponse;
 
 public interface CarritoItemService {
     
@@ -19,7 +20,7 @@ public interface CarritoItemService {
 
     public void actualizar(Carrito_item carrito_item);
 
-    public void eliminarPorId(Integer id);
+    void eliminarPorId(Integer id, Authentication auth);
     
     Carrito buscarCarritoPorId(Integer id);
 
@@ -27,7 +28,7 @@ public interface CarritoItemService {
 
     Carrito obtenerCarritoDelUsuario(Authentication auth);
 
-    Carrito_item crearOIncrementarDesdeRequest(CarritoItemRequest request, Authentication auth);
+    CarritoItemResponse crearOIncrementarDesdeRequest(CarritoItemRequest request, Authentication auth);
 
-    Carrito_item modificarCantidad(Integer id, boolean incrementar);
+    Carrito_item modificarCantidad(Integer id, boolean incrementar, Authentication auth);
 }
