@@ -2,10 +2,12 @@ package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionRequest;
+import com.urbanfeet_backend.Model.ZapatillaDTOs.VariacionResponse;
 
 public interface Zapatilla_variacionService {
 
-    Zapatilla_variacion crearVariacion(Integer zapatillaId, Zapatilla_variacion variacion);
+    VariacionResponse crearVariacion(Integer zapatillaId, VariacionRequest request);
 
     List<Zapatilla_variacion> obtenerTodo();
 
@@ -13,9 +15,9 @@ public interface Zapatilla_variacionService {
 
     Zapatilla_variacion buscarPorId(Integer id);
 
-    Zapatilla_variacion actualizar(Integer id, Zapatilla_variacion variacion);
+    VariacionResponse actualizar(Integer id, VariacionRequest request);
 
     void eliminarPorId(Integer id);
 
-    List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
+    List<VariacionResponse> findByZapatillaId(Integer zapatillaId);
 }
