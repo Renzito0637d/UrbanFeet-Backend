@@ -16,10 +16,6 @@ import com.urbanfeet_backend.Entity.Enum.RoleName;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    // Método personalizado que busca un usuario en la base de datos por su correo
-    // electrónico.
-    // Devuelve un Optional<User> para manejar el caso en el que no se encuentre un
-    // usuario con ese correo.
     Optional<User> findUserByEmail(String email);
 
     Optional<User> findByDocumentTypeAndDocumentNumber(DocumentType type, String number);
@@ -28,5 +24,4 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query("SELECT u FROM User u WHERE :role NOT MEMBER OF u.roles")
     Page<User> findByRolesNotMember(@Param("role") RoleName role, Pageable pageable);
-
 }
