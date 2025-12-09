@@ -22,12 +22,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Page<User> findByRoles(RoleName role, Pageable pageable);
 
-    @Query("""
-        SELECT u FROM User u 
-        WHERE NOT EXISTS (
-            SELECT r FROM User u2 JOIN u2.roles r
-            WHERE u2 = u AND r = :role
-        )
-    """)
-    Page<User> findUsersWithoutRole(@Param("role") RoleName role, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE :role NOT MEMBER OF u.roles")
+    Page<User> findByRolesNotMember(@Param("role") RoleName role, Pageable pageable);
 }
