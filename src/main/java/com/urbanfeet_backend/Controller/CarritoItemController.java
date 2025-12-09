@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.urbanfeet_backend.Entity.Carrito_item;
-import com.urbanfeet_backend.Model.CarritoItemRequest;
-import com.urbanfeet_backend.Model.CarritoItemResponse;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoItemRequest;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoItemResponse;
 import com.urbanfeet_backend.Services.Interfaces.CarritoItemService;
 
 @RestController
