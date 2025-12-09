@@ -2,19 +2,22 @@ package com.urbanfeet_backend.Services.Implements;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.urbanfeet_backend.DAO.Interfaces.CarritoItemDAO;
 import com.urbanfeet_backend.Entity.Carrito;
 import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Entity.Carrito_item;
 import com.urbanfeet_backend.Entity.Zapatilla_variacion;
-import com.urbanfeet_backend.Model.CarritoItemRequest;
-import com.urbanfeet_backend.Model.CarritoItemResponse;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoItemDetailResponse;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoItemRequest;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoItemResponse;
+import com.urbanfeet_backend.Model.CarritoDTOs.CarritoResponse;
 import com.urbanfeet_backend.Repository.CarritoItemRepository;
 import com.urbanfeet_backend.Repository.CarritoRepository;
 import com.urbanfeet_backend.Repository.UserRepository;
@@ -91,56 +94,83 @@ public class CarritoItemServiceImpl implements CarritoItemService {
     }
 
     @Override
-    public Carrito obtenerCarritoDelUsuario(Authentication auth) {
-        if (auth == null)
-            throw new IllegalArgumentException("No autenticado");
+    @Transactional(readOnly = true) // <--- CRÍTICO: Mantiene la sesión abierta para leer los items
+    public CarritoResponse obtenerCarritoDelUsuario(Authentication auth) {
+        if (auth == null) throw new IllegalArgumentException("No autenticado");
 
-        Object principal = auth.getPrincipal();
-        String email = (principal instanceof UserDetails ud) ? ud.getUsername() : principal.toString();
-
+        String email = auth.getName(); // Spring Security usa el nombre/email principal aquí
+        
         User user = userRepository.findUserByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        return carritoRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException("El usuario no tiene un carrito asociado"));
+        // Buscamos el carrito (o creamos uno si no existe, según tu lógica de negocio)
+        // Aquí asumo que ya existe. Si puede ser null, manéjalo.
+        Carrito carrito = carritoRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no tiene carrito"));
+
+        // Mapeamos a DTO
+        List<CarritoItemDetailResponse> itemsDto = carrito.getItems().stream()
+                .map(item -> {
+                    var variacion = item.getZapatilla_variacion();
+                    var zapatilla = variacion.getZapatilla();
+                    
+                    return new CarritoItemDetailResponse(
+                        item.getId(),
+                        item.getCantidad(),
+                        item.getCantidad() * variacion.getPrecio(), // Subtotal
+                        
+                        variacion.getId(),
+                        variacion.getColor(),
+                        variacion.getTalla(),
+                        variacion.getPrecio(),
+                        variacion.getImageUrl(),
+                        variacion.getStock(),
+                        
+                        zapatilla.getNombre(),
+                        zapatilla.getMarca()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        // Calcular total general
+        double total = itemsDto.stream().mapToDouble(i -> i.subtotal()).sum();
+
+        return new CarritoResponse(carrito.getId(), total, itemsDto);
     }
 
     @Override
+    @Transactional
     public CarritoItemResponse crearOIncrementarDesdeRequest(CarritoItemRequest request, Authentication auth) {
-        if (request == null)
-            throw new IllegalArgumentException("Request inválido");
+        if (request == null) throw new IllegalArgumentException("Request inválido");
 
-        Carrito carrito = obtenerCarritoDelUsuario(auth);
+        // CORRECCIÓN AQUÍ: Usamos el método privado que devuelve la ENTIDAD
+        Carrito carrito = getCarritoEntity(auth); 
 
         Zapatilla_variacion variacion = buscarVariacionPorId(request.getZapatillaVariacionId());
-        if (variacion == null)
-            throw new IllegalArgumentException(
-                    "La variación con ID " + request.getZapatillaVariacionId() + " no existe");
+        if (variacion == null) {
+            throw new IllegalArgumentException("La variación con ID " + request.getZapatillaVariacionId() + " no existe");
+        }
 
-        Optional<Carrito_item> existenteOpt = carritoItemRepository.findByCarritoAndZapatillaVariacion(carrito,
-                variacion);
-
+        Optional<Carrito_item> existenteOpt = carritoItemRepository.findByCarritoAndZapatillaVariacion(carrito, variacion);
         Carrito_item itemGuardado;
 
         if (existenteOpt.isPresent()) {
             Carrito_item existente = existenteOpt.get();
             int nuevaCantidad = (existente.getCantidad() == null ? 0 : existente.getCantidad()) + 1;
             existente.setCantidad(nuevaCantidad);
-            actualizar(existente);
+            actualizar(existente); // Asegúrate que tu DAO haga merge/save
             itemGuardado = existente;
         } else {
             Carrito_item nuevo = new Carrito_item();
-            nuevo.setCarrito(carrito);
+            nuevo.setCarrito(carrito); // Ahora sí funciona porque 'carrito' es una Entidad
             nuevo.setZapatilla_variacion(variacion);
             nuevo.setCantidad(request.getCantidad() == null ? 1 : request.getCantidad());
             guardar(nuevo);
             itemGuardado = nuevo;
         }
 
-        // CAMBIO 2: Convertimos a DTO antes de devolver
         return convertirADTO(itemGuardado);
     }
-
     @Override
     public Carrito_item modificarCantidad(Integer id, boolean incrementar, Authentication auth) {
         // 1. Buscamos el item
@@ -187,5 +217,16 @@ public class CarritoItemServiceImpl implements CarritoItemService {
                 entidad.getCantidad(),
                 entidad.getZapatilla_variacion().getId(),
                 precio);
+    }
+
+    private Carrito getCarritoEntity(Authentication auth) {
+        if (auth == null) throw new IllegalArgumentException("No autenticado");
+        
+        String email = auth.getName();
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        return carritoRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no tiene carrito"));
     }
 }
