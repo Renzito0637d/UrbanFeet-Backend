@@ -109,6 +109,18 @@ public class PedidoController {
                 return ResponseEntity.noContent().build();
         }
 
+        @PatchMapping("/{id}/cancelar")
+        public ResponseEntity<Void> cancelarPedido(@PathVariable Integer id, Authentication authentication) {
+                User user = getUser(authentication); // Tu helper privado
+
+                try {
+                        pedidoService.cancelarPedido(id, user);
+                        return ResponseEntity.noContent().build();
+                } catch (RuntimeException e) {
+                        return ResponseEntity.badRequest().body(null); // O manejar el mensaje de error
+                }
+        }
+
         private User getUser(Authentication auth) {
                 return userRepository.findUserByEmail(auth.getName())
                                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

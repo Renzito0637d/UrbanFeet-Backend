@@ -118,4 +118,11 @@ public class Zapatilla_variacionServiceImpl implements Zapatilla_variacionServic
                 v.getTalla(),
                 v.getZapatilla().getId());
     }
+
+    @Override
+    @Transactional
+    public void actualizar(Zapatilla_variacion variacion) {
+        // Simplemente llamamos al DAO para que guarde los cambios (stock, etc.)
+        variacionDao.actualizar(variacion); 
+    }
 }

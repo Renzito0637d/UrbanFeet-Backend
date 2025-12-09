@@ -123,13 +123,13 @@ public class PedidoServiceImpl implements PedidoService {
             if (variacion == null)
                 throw new RuntimeException("Variación no encontrada");
 
-            // Validar y descontar stock
             if (variacion.getStock() < d.getCantidad()) {
-                throw new RuntimeException("No hay stock suficiente");
+                throw new RuntimeException("Sin stock suficiente para: " + variacion.getZapatilla().getNombre());
             }
+
             variacion.setStock(variacion.getStock() - d.getCantidad());
-            // variacionService.guardar(variacion); // Descomenta si tienes el método
-            // guardar
+
+            variacionService.actualizar(variacion);
 
             detalle.setZapatilla_variacion(variacion);
             detalle.setCantidad(d.getCantidad());
@@ -242,5 +242,43 @@ public class PedidoServiceImpl implements PedidoService {
                 detalles,
                 metodo // <--- Pasamos el método de pago
         );
+    }
+
+    @Override
+    @Transactional
+    public void cancelarPedido(Integer id, User user) {
+        // 1. Buscar el pedido
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+        if (pedido == null)
+            throw new RuntimeException("Pedido no encontrado");
+
+        // 2. Validar que sea del usuario (o admin)
+        if (!pedido.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("No autorizado");
+        }
+
+        // 3. Validar que no esté ya cancelado o enviado
+        if ("CANCELADO".equals(pedido.getEstado())) {
+            throw new RuntimeException("El pedido ya está cancelado");
+        }
+        if ("ENVIADO".equals(pedido.getEstado()) || "ENTREGADO".equals(pedido.getEstado())) {
+            throw new RuntimeException("No se puede cancelar un pedido que ya salió");
+        }
+
+        // 4. RESTAURAR STOCK (La magia ocurre aquí)
+        for (Pedido_detalle detalle : pedido.getDetalles()) {
+            Zapatilla_variacion variacion = detalle.getZapatilla_variacion();
+
+            // Sumamos la cantidad que había comprado
+            int stockRestaurado = variacion.getStock() + detalle.getCantidad();
+            variacion.setStock(stockRestaurado);
+
+            // Guardamos la variación actualizada
+            variacionService.actualizar(variacion);
+        }
+
+        // 5. Cambiar estado
+        pedido.setEstado("CANCELADO");
+        pedidoDao.update(pedido);
     }
 }

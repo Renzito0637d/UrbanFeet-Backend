@@ -31,4 +31,6 @@ public interface PedidoService {
     Pedido actualizarPedido(Integer id, User user, List<PedidoDetalleRequestDTO> detallesDTO);
 
     void eliminarPedido(Integer id, User user);
+
+    public void cancelarPedido(Integer id, User user);
 }

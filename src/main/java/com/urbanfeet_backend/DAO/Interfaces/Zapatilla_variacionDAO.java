@@ -16,4 +16,6 @@ public interface Zapatilla_variacionDAO {
     void deleteById(Integer id);
 
     List<Zapatilla_variacion> findByZapatillaId(Integer zapatillaId);
+
+    void actualizar(Zapatilla_variacion variacion);
 }

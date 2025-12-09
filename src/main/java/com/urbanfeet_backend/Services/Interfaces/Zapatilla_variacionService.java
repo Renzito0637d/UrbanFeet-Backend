@@ -21,4 +21,6 @@ public interface Zapatilla_variacionService {
     void eliminarPorId(Integer id);
 
     List<VariacionResponse> findByZapatillaId(Integer zapatillaId);
+
+    void actualizar(Zapatilla_variacion variacion);
 }
