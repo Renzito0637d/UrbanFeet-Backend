@@ -6,6 +6,7 @@ import com.urbanfeet_backend.Entity.Enum.RoleName;
 public class UserUpdateRequest {
     private String nombre;
     private String apellido;
+    private String email;
     private String phone;
     private DocumentType documentType;
     private String documentNumber;
@@ -26,6 +27,14 @@ public class UserUpdateRequest {
 
     public void setApellido(String apellido) {
         this.apellido = apellido;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPhone() {

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.urbanfeet_backend.Entity.Reclamacion;
 import com.urbanfeet_backend.Entity.User;
+import com.urbanfeet_backend.Model.DTOs.ReclamacionRequestDTO;
+import com.urbanfeet_backend.Model.DTOs.ReclamacionResponseDTO;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.ReclamacionService;
 
@@ -23,27 +25,6 @@ public class ReclamacionController {
     public ReclamacionController(ReclamacionService reclamacionService, UserRepository userRepository) {
         this.reclamacionService = reclamacionService;
         this.userRepository = userRepository;
-    }
-
-    // DTOs internos
-    public static class ReclamacionRequestDTO {
-        public String producto;
-        public Double montoReclamado;
-        public String tipoMensaje;
-        public String detalleReclamo;
-        public String solucionPropuesta;
-    }
-
-    public static class ReclamacionResponseDTO {
-        public Integer id;
-        public String producto;
-        public Double montoReclamado;
-        public String tipoMensaje;
-        public String detalleReclamo;
-        public String solucionPropuesta;
-        public String fechaRegistro;
-        public String estado;
-        public Integer userId;
     }
 
     @GetMapping("/usuario")
@@ -78,7 +59,6 @@ public class ReclamacionController {
         r.setSolucionPropuesta(dto.solucionPropuesta);
 
         Reclamacion creado = reclamacionService.crearReclamacion(r, user.getId());
-
         return ResponseEntity.ok(toResponse(creado));
     }
 
@@ -89,9 +69,7 @@ public class ReclamacionController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         List<Reclamacion> lista = reclamacionService.obtenerMisReclamaciones(user.getId());
-
-        return ResponseEntity.ok(
-                lista.stream().map(this::toResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(lista.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping
@@ -120,8 +98,7 @@ public class ReclamacionController {
         data.setDetalleReclamo(dto.detalleReclamo);
         data.setSolucionPropuesta(dto.solucionPropuesta);
 
-        return ResponseEntity.ok(
-                toResponse(reclamacionService.actualizar(id, data)));
+        return ResponseEntity.ok(toResponse(reclamacionService.actualizar(id, data)));
     }
 
     @DeleteMapping("/{id}")
@@ -132,7 +109,7 @@ public class ReclamacionController {
 
     private ReclamacionResponseDTO toResponse(Reclamacion r) {
         ReclamacionResponseDTO dto = new ReclamacionResponseDTO();
-        dto.id = r.getId() != null ? r.getId().intValue() : null;
+        dto.id = r.getId() != null ? r.getId() : null;
         dto.producto = r.getProducto();
         dto.montoReclamado = r.getMontoReclamado();
         dto.tipoMensaje = r.getTipoMensaje();
@@ -140,8 +117,6 @@ public class ReclamacionController {
         dto.solucionPropuesta = r.getSolucionPropuesta();
         dto.fechaRegistro = r.getFechaRegistro() != null ? r.getFechaRegistro().toString() : null;
         dto.estado = r.getEstado();
-
-        // ✔ corregido: coincide al 100% con tu Entity
         dto.userId = r.getUser() != null ? r.getUser().getId() : null;
 
         return dto;

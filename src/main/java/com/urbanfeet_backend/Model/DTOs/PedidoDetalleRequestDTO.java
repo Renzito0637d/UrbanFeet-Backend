@@ -1,18 +1,9 @@
-package com.urbanfeet_backend.Model;
+package com.urbanfeet_backend.Model.DTOs;
 
-public class CarritoItemRequest {
-    
-    private Integer carritoId;
+public class PedidoDetalleRequestDTO {
     private Integer zapatillaVariacionId;
     private Integer cantidad;
-
-    public Integer getCarritoId() {
-        return carritoId;
-    }
-
-    public void setCarritoId(Integer carritoId) {
-        this.carritoId = carritoId;
-    }
+    private Double precioTotal;
 
     public Integer getZapatillaVariacionId() {
         return zapatillaVariacionId;
@@ -28,5 +19,13 @@ public class CarritoItemRequest {
 
     public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
+    }
+
+    public Double getPrecioTotal() {
+        return precioTotal;
+    }
+
+    public void setPrecioTotal(Double precioTotal) {
+        this.precioTotal = precioTotal;
     }
 }
