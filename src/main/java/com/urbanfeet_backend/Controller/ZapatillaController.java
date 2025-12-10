@@ -6,6 +6,10 @@ import com.urbanfeet_backend.Services.Interfaces.ZapatillaService;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,9 +47,34 @@ public class ZapatillaController {
         return ResponseEntity.ok(zapDto);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ZapatillaResponse>> listarTodas() {
-        return ResponseEntity.ok(zapatillaService.obtenerTodo());
+    @GetMapping("/page")
+    public ResponseEntity<Page<ZapatillaResponse>> listarTodoAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        // Configurar dirección de ordenamiento
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        // Crear objeto Pageable
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Llamar al servicio
+        return ResponseEntity.ok(zapatillaService.obtenerPagina(pageable));
+    }
+
+    @GetMapping("/public/list")
+    public ResponseEntity<Page<ZapatillaResponse>> listarCatalogoPublico(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir // Mejor desc para ver lo nuevo primero
+    ) {
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return ResponseEntity.ok(zapatillaService.obtenerCatalogoPublico(pageable));
     }
 
     @PutMapping("/{id}")

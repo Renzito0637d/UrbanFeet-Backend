@@ -1,6 +1,8 @@
 package com.urbanfeet_backend.Services.Implements;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,15 +55,15 @@ public class ZapatillaServiceImpl implements ZapatillaService {
     // Métodos CRUD estándar
     // -----------------------------------------
     @Override
-    @Transactional(readOnly = true) // <--- ESTO EVITA EL ERROR LAZY
-    public List<ZapatillaResponse> obtenerTodo() {
-        List<Zapatilla> zapatillas = zapatillaDao.findAll();
+    @Transactional(readOnly = true)
+    public Page<ZapatillaResponse> obtenerPagina(Pageable pageable) {
+        // 1. Pedir la página a la base de datos
+        Page<Zapatilla> paginaZapatillas = zapatillaDao.findAll(pageable);
 
-        return zapatillas.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        // 2. Convertir Page<Entidad> a Page<DTO>
+        // El método .map() es nativo de Spring Data, itera internamente
+        return paginaZapatillas.map(this::mapToDto);
     }
-
     // Método auxiliar para convertir Entidad -> DTO
     private ZapatillaResponse mapToDto(Zapatilla z) {
         ZapatillaResponse dto = new ZapatillaResponse();
@@ -118,5 +120,13 @@ public class ZapatillaServiceImpl implements ZapatillaService {
         zapatilla.setTipo(request.tipo());
 
         return zapatillaDao.update(zapatilla);
+    }
+
+    @Override
+    public Page<ZapatillaResponse> obtenerCatalogoPublico(Pageable pageable) {
+        Page<Zapatilla> pagina = zapatillaDao.findByVariacionesIsNotEmpty(pageable);
+        
+        // Convertimos a DTO
+        return pagina.map(this::mapToDto);
     }
 }
