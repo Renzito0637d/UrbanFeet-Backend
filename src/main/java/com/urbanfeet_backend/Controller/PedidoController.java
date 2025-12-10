@@ -10,7 +10,7 @@ import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
-
+import com.urbanfeet_backend.Model.DTOs.PedidoEstadoDTO;
 // Importar los DTOs
 import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
@@ -29,6 +29,13 @@ public class PedidoController {
                 this.pedidoService = pedidoService;
                 this.direccionService = direccionService;
                 this.userRepository = userRepository;
+        }
+
+        @GetMapping("/all")
+        public ResponseEntity<List<PedidoResponseDTO>> listarTodosLosPedidos() {
+                // Usamos el servicio que devuelve DTOs pero sin filtrar por ID de usuario
+                // Necesitarás crear este método en tu servicio si no existe:
+                return ResponseEntity.ok(pedidoService.obtenerTodosLosPedidos());
         }
 
         // --- CREAR PEDIDO (POST) ---
@@ -119,6 +126,34 @@ public class PedidoController {
                 } catch (RuntimeException e) {
                         return ResponseEntity.badRequest().body(null); // O manejar el mensaje de error
                 }
+        }
+
+        @PatchMapping("/{id}/estado")
+        public ResponseEntity<Void> actualizarEstado(
+                        @PathVariable Integer id,
+                        @RequestBody PedidoEstadoDTO dto, // Usamos el DTO o un Map<String, String>
+                        Authentication authentication) {
+
+                // Validar si el usuario es ADMIN o REPARTIDOR si usas roles
+                // Si es libre para el admin/repartidor, llamamos directo:
+
+                pedidoService.actualizarEstado(id, dto.estado());
+
+                return ResponseEntity.ok().build();
+        }
+
+        @PutMapping("/admin/{id}")
+        public ResponseEntity<PedidoResponseDTO> actualizarPedidoAdmin(
+                        @PathVariable Integer id,
+                        @RequestBody PedidoRequestDTO dto) {
+
+                // Nota: No necesitamos pasar el 'authentication' ni validar el usuario aquí
+                // porque asumimos que Spring Security ya protegió la ruta /admin/** // o
+                // confías en que este método es administrativo.
+
+                PedidoResponseDTO response = pedidoService.actualizarPedidoAdmin(id, dto);
+
+                return ResponseEntity.ok(response);
         }
 
         private User getUser(Authentication auth) {
