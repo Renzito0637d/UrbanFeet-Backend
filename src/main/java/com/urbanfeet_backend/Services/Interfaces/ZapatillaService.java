@@ -1,6 +1,7 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.urbanfeet_backend.Entity.Zapatilla;
 import com.urbanfeet_backend.Model.ZapatillaDTOs.ZapatillaResponse;
@@ -12,7 +13,9 @@ public interface ZapatillaService {
 
     ZapatillaResponse obtenerZapatillaPorId(Integer id);
 
-    List<ZapatillaResponse> obtenerTodo();
+    Page<ZapatillaResponse> obtenerPagina(Pageable pageable);
+
+    Page<ZapatillaResponse> obtenerCatalogoPublico(Pageable pageable);
 
     Zapatilla guardar(Zapatilla zapatilla);
 

@@ -3,6 +3,7 @@ package com.urbanfeet_backend.Services.Interfaces;
 import java.util.List;
 
 import com.urbanfeet_backend.Entity.Venta;
+import com.urbanfeet_backend.Model.VentaDTOs.VentaResponseDTO;
 
 public interface VentaService {
 
@@ -15,5 +16,7 @@ public interface VentaService {
     public void actualizar(Venta venta);
 
     public void eliminarPorId(Integer id);
+
+    List<VentaResponseDTO> obtenerTodasLasVentasDTO();
 
 }

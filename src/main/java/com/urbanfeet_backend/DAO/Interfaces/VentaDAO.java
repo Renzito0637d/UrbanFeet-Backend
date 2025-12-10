@@ -15,5 +15,7 @@ public interface VentaDAO {
     public void update(Venta venta);
 
     public void deleteById(Integer id);
+
+    public Venta findByPedidoId(Integer pedidoId);
     
 }

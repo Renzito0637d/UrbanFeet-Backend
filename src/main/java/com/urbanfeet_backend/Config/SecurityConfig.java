@@ -44,7 +44,7 @@ public class SecurityConfig {
                                                      * "/carrito/**",
                                                      * "/carrito-items/**",
                                                      */
-                                "/zapatilla")
+                                "/zapatilla/public/list")
                         .permitAll()
 
                         // Por roles (GrantedAuthority tiene "ROLE_")

@@ -6,5 +6,5 @@ import com.urbanfeet_backend.Entity.Venta;
 
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Integer> {
-    
+    Venta findByPedidoId(Integer pedidoId);
 }
