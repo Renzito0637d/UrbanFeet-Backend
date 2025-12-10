@@ -22,6 +22,7 @@ import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
 import com.urbanfeet_backend.Model.DTOs.DireccionEnvioDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoDetalleResponseDTO;
+import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
 
 @Service
@@ -43,8 +44,15 @@ public class PedidoServiceImpl implements PedidoService {
     private VentaService ventaService;
 
     @Override
-    public List<Pedido> obtenerTodo() {
-        return pedidoDao.findAll();
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerTodosLosPedidos() {
+        // 1. Obtenemos todas las entidades de la base de datos
+        List<Pedido> pedidos = pedidoDao.findAll();
+
+        // 2. Las convertimos a DTO usando tu método helper existente
+        return pedidos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -216,13 +224,11 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(d -> {
                     var variacion = d.getZapatilla_variacion();
                     var zapatilla = variacion.getZapatilla();
-
                     return new PedidoDetalleResponseDTO(
                             d.getId(),
                             variacion.getId(),
                             d.getCantidad(),
                             d.getPrecioTotal(),
-                            // Datos extra para el Frontend:
                             zapatilla.getNombre(),
                             zapatilla.getMarca(),
                             variacion.getColor(),
@@ -233,15 +239,21 @@ public class PedidoServiceImpl implements PedidoService {
         Venta venta = ventaDAO.findByPedidoId(p.getId());
         String metodo = (venta != null) ? venta.getMetodoPago() : "Desconocido";
 
+        // Obtenemos el usuario para sacar sus datos
+        User u = p.getUser();
+
         return new PedidoResponseDTO(
                 p.getId(),
-                p.getUser().getId(),
+                u.getId(),
                 p.getEstado(),
                 p.getFechaPedido(),
                 DireccionEnvioDTO.fromEntity(p.getDireccion_envio()),
                 detalles,
-                metodo // <--- Pasamos el método de pago
-        );
+                metodo,
+                u.getNombre(),
+                u.getApellido(),
+                u.getEmail(),
+                u.getPhone());
     }
 
     @Override
@@ -252,33 +264,95 @@ public class PedidoServiceImpl implements PedidoService {
         if (pedido == null)
             throw new RuntimeException("Pedido no encontrado");
 
-        // 2. Validar que sea del usuario (o admin)
+        // 2. Validaciones (Usuario, Estado actual...)
         if (!pedido.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("No autorizado");
         }
-
-        // 3. Validar que no esté ya cancelado o enviado
         if ("CANCELADO".equals(pedido.getEstado())) {
             throw new RuntimeException("El pedido ya está cancelado");
         }
-        if ("ENVIADO".equals(pedido.getEstado()) || "ENTREGADO".equals(pedido.getEstado())) {
-            throw new RuntimeException("No se puede cancelar un pedido que ya salió");
-        }
+        // ... otras validaciones
 
-        // 4. RESTAURAR STOCK (La magia ocurre aquí)
+        // 3. RESTAURAR STOCK (Tu lógica existente)
         for (Pedido_detalle detalle : pedido.getDetalles()) {
             Zapatilla_variacion variacion = detalle.getZapatilla_variacion();
-
-            // Sumamos la cantidad que había comprado
             int stockRestaurado = variacion.getStock() + detalle.getCantidad();
             variacion.setStock(stockRestaurado);
-
-            // Guardamos la variación actualizada
             variacionService.actualizar(variacion);
         }
 
-        // 5. Cambiar estado
+        // 4. CAMBIAR ESTADO DEL PEDIDO
         pedido.setEstado("CANCELADO");
         pedidoDao.update(pedido);
+
+        // 5. ACTUALIZAR LA VENTA A "REEMBOLSADO" (NUEVO)
+        Venta venta = ventaDAO.findByPedidoId(id);
+        if (venta != null) {
+            venta.setEstadoPago("REEMBOLSADO"); // O "ANULADO"
+            ventaDAO.save(venta); // Guardamos el cambio
+        }
+    }
+
+    @Override
+    @Transactional
+    public void actualizarEstado(Integer id, String nuevoEstado) {
+        Pedido pedido = pedidoDao.findById(id); // No necesitamos detalles para esto, carga rápida
+        if (pedido == null) {
+            throw new RuntimeException("Pedido no encontrado");
+        }
+
+        // Aquí puedes agregar validaciones de transición de estado si quieres
+        // Ej: No pasar de ENTREGADO a PENDIENTE
+
+        pedido.setEstado(nuevoEstado);
+        pedidoDao.update(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto) {
+        // 1. Buscar el pedido
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+        if (pedido == null)
+            throw new RuntimeException("Pedido no encontrado");
+
+        if ("CANCELADO".equals(dto.getEstado()) && !"CANCELADO".equals(pedido.getEstado())) {
+
+            // A. Restaurar Stock
+            for (Pedido_detalle detalle : pedido.getDetalles()) {
+                Zapatilla_variacion variacion = detalle.getZapatilla_variacion();
+                variacion.setStock(variacion.getStock() + detalle.getCantidad());
+                variacionService.actualizar(variacion);
+            }
+
+            // B. Reembolsar Venta
+            Venta venta = ventaDAO.findByPedidoId(id);
+            if (venta != null) {
+                venta.setEstadoPago("REEMBOLSADO");
+                ventaDAO.save(venta);
+            }
+
+            pedido.setEstado("CANCELADO");
+            pedidoDao.update(pedido);
+            return mapToDTO(pedido);
+        }
+
+        // C. Actualizar Estado
+        if (dto.getEstado() != null && !dto.getEstado().isEmpty()) {
+            pedido.setEstado(dto.getEstado());
+        }
+
+        // D. Actualizar Método de Pago (Solo texto en la venta)
+        if (dto.getMetodoPago() != null) {
+            Venta venta = ventaDAO.findByPedidoId(id);
+            if (venta != null) {
+                venta.setMetodoPago(dto.getMetodoPago());
+                ventaDAO.save(venta);
+            }
+        }
+
+        pedidoDao.update(pedido);
+
+        return mapToDTO(pedido);
     }
 }

@@ -3,6 +3,7 @@ package com.urbanfeet_backend.Services.Interfaces;
 import java.util.List;
 
 import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
+import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
 import com.urbanfeet_backend.Entity.Pedido;
 import com.urbanfeet_backend.Entity.User;
@@ -10,7 +11,7 @@ import com.urbanfeet_backend.Entity.Direccion;
 
 public interface PedidoService {
 
-    List<Pedido> obtenerTodo();
+    List<PedidoResponseDTO> obtenerTodosLosPedidos();
 
     void guardar(Pedido pedido);
 
@@ -33,4 +34,8 @@ public interface PedidoService {
     void eliminarPedido(Integer id, User user);
 
     public void cancelarPedido(Integer id, User user);
+
+    void actualizarEstado(Integer id, String nuevoEstado);
+
+    PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto);
 }
