@@ -1,0 +1,42 @@
+package com.urbanfeet_backend.Model.PedidoDTOs;
+
+import java.util.List;
+
+public class PedidoRequestDTO {
+    private String estado;
+    private Integer direccionId;
+    private String metodoPago;
+    private List<PedidoDetalleRequestDTO> detalles;
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public Integer getDireccionId() {
+        return direccionId;
+    }
+
+    public void setDireccionId(Integer direccionId) {
+        this.direccionId = direccionId;
+    }
+
+    public String getMetodoPago() {
+        return metodoPago;
+    }
+
+    public void setMetodoPago(String metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+
+    public List<PedidoDetalleRequestDTO> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<PedidoDetalleRequestDTO> detalles) {
+        this.detalles = detalles;
+    }
+}

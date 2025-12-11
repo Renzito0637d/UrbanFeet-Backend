@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService{
     public record LogoutCookies(ResponseCookie delAccess, ResponseCookie delRefresh) {
     }
 
-    public record MeResponse(Integer id, String email, String apellido, List<String> roles) {
+    public record MeResponse(Integer id, String email, String apellido, String nombre, List<String> roles) {
     }
 
     @Override
@@ -100,12 +100,13 @@ public class AuthServiceImpl implements AuthService{
         // getApellido()
         Integer id = tryInvoke(principal, "getId", Integer.class);
         String apellido = tryInvoke(principal, "getApellido", String.class);
+        String nombre = tryInvoke(principal, "getNombre", String.class);
 
         List<String> roles = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority) // p.ej. "ROLE_ADMIN"
                 .toList();
 
-        return new MeResponse(id, email, apellido, roles);
+        return new MeResponse(id, email, apellido, nombre, roles);
     }
 
     public ResponseCookie refresh(String refreshToken) {

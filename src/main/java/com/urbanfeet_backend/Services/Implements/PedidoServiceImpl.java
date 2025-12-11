@@ -1,16 +1,62 @@
 package com.urbanfeet_backend.Services.Implements;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.Picture;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfGState;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import com.urbanfeet_backend.DAO.Interfaces.PedidoDAO;
+import com.urbanfeet_backend.DAO.Interfaces.PedidoSeguimientoDAO;
+import com.urbanfeet_backend.DAO.Interfaces.VentaDAO;
 import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
+import com.urbanfeet_backend.Services.Interfaces.VentaService;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionEnvioDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleResponseDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.SeguimientoDTO;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -19,14 +65,30 @@ public class PedidoServiceImpl implements PedidoService {
     private PedidoDAO pedidoDao;
 
     @Autowired
+    private VentaDAO ventaDAO;
+
+    @Autowired
+    private PedidoSeguimientoDAO seguimientoDao;
+
+    @Autowired
     private Pedido_detalleService detalleService;
 
     @Autowired
     private Zapatilla_variacionService variacionService;
 
+    @Autowired
+    private VentaService ventaService;
+
     @Override
-    public List<Pedido> obtenerTodo() {
-        return pedidoDao.findAll();
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerTodosLosPedidos() {
+        // 1. Obtenemos todas las entidades de la base de datos
+        List<Pedido> pedidos = pedidoDao.findAll();
+
+        // 2. Las convertimos a DTO usando tu método helper existente
+        return pedidos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -50,101 +112,484 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
-    public List<Pedido> obtenerPedidosConDetallesPorUsuario(Integer userId) {
-        return pedidoDao.findAllWithDetallesByUserId(userId);
+    @Transactional(readOnly = true) // Mantiene la sesión abierta
+    public List<PedidoResponseDTO> obtenerPedidosConDetallesPorUsuario(Integer userId) {
+        List<Pedido> pedidos = pedidoDao.findAllWithDetallesByUserId(userId);
+
+        // Convertimos a DTO aquí dentro
+        return pedidos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // --- IMPLEMENTACIÓN CORREGIDA 2 ---
+    @Override
+    @Transactional(readOnly = true)
+    public PedidoResponseDTO obtenerPedidoConDetallesPorId(Integer id, Integer userId) {
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+
+        if (pedido == null)
+            return null;
+
+        // Validación de seguridad (el pedido debe pertenecer al usuario)
+        if (!pedido.getUser().getId().equals(userId)) {
+            throw new RuntimeException("No autorizado");
+        }
+
+        return mapToDTO(pedido);
     }
 
     @Override
-    public Pedido obtenerPedidoConDetallesPorId(Integer id) {
-        return pedidoDao.findByIdWithDetalles(id);
-    }
+    @Transactional // IMPORTANTE: Si falla la venta, se borra el pedido
+    public PedidoResponseDTO crearPedido(User user, Direccion direccion,
+            List<PedidoDetalleRequestDTO> detallesDTO,
+            String metodoPago) {
 
-    // ---------------- Lógica de negocio ----------------
-
-    @Override
-    public Pedido crearPedido(User user, Direccion direccion,
-            List<com.urbanfeet_backend.Controller.PedidoController.PedidoDetalleRequestDTO> detallesDTO) {
-        // Crear pedido
+        // 1. Lógica de Crear Pedido (IGUAL QUE ANTES)
         Pedido pedido = new Pedido();
         pedido.setUser(user);
         pedido.setFechaPedido(LocalDateTime.now());
         pedido.setEstado("PENDIENTE");
         pedido.setDireccion_envio(new Direccion_envio(
-                direccion.getCalle(),
-                direccion.getDistrito(),
-                direccion.getProvincia(),
-                direccion.getDepartamento(),
-                direccion.getReferencia()));
-        this.guardar(pedido);
+                direccion.getCalle(), direccion.getDistrito(), direccion.getProvincia(),
+                direccion.getDepartamento(), direccion.getReferencia()));
+        pedidoDao.save(pedido);
 
-        // Crear detalles
-        List<Pedido_detalle> detalles = detallesDTO.stream().map(d -> {
+        // 2. Lógica de Detalles y Stock (IGUAL QUE ANTES)
+        double sumaTotal = 0.0;
+        List<Pedido_detalle> detalles = new ArrayList<>();
+
+        for (PedidoDetalleRequestDTO d : detallesDTO) {
             Pedido_detalle detalle = new Pedido_detalle();
             detalle.setPedido(pedido);
 
-            Zapatilla_variacion variacion = variacionService.buscarPorId(d.zapatillaVariacionId());
+            Zapatilla_variacion variacion = variacionService.buscarPorId(d.getZapatillaVariacionId());
             if (variacion == null)
-                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
-            detalle.setZapatilla_variacion(variacion);
+                throw new RuntimeException("Variación no encontrada");
 
-            detalle.setCantidad(d.cantidad());
-            detalle.setPrecioTotal(d.precioTotal());
+            if (variacion.getStock() < d.getCantidad()) {
+                throw new RuntimeException("Sin stock suficiente para: " + variacion.getZapatilla().getNombre());
+            }
+
+            variacion.setStock(variacion.getStock() - d.getCantidad());
+
+            variacionService.actualizar(variacion);
+
+            detalle.setZapatilla_variacion(variacion);
+            detalle.setCantidad(d.getCantidad());
+
+            double precioReal = variacion.getPrecio() * d.getCantidad();
+            detalle.setPrecioTotal(precioReal);
+            sumaTotal += precioReal;
 
             detalleService.guardar(detalle);
-            return detalle;
-        }).toList();
-
+            detalles.add(detalle);
+        }
         pedido.setDetalles(detalles);
-        this.actualizar(pedido);
+        pedidoDao.update(pedido);
 
-        return pedido;
+        // 3. Registrar Venta (IGUAL QUE ANTES)
+        Venta venta = new Venta();
+        venta.setPedido(pedido);
+        venta.setFecha(LocalDate.now());
+        venta.setHora(LocalTime.now());
+        venta.setEstadoPago("COMPLETADO");
+        venta.setMetodoPago(metodoPago);
+        venta.setMontoPagado(BigDecimal.valueOf(sumaTotal));
+        ventaService.guardar(venta);
+
+        registrarSeguimiento(pedido, "PENDIENTE", user);
+        return mapToDTO(pedido);
     }
 
     @Override
-    public Pedido actualizarPedido(Integer id, User user,
-            List<com.urbanfeet_backend.Controller.PedidoController.PedidoDetalleRequestDTO> detallesDTO) {
-        Pedido pedido = this.obtenerPedidoConDetallesPorId(id);
+    @Transactional
+    public Pedido actualizarPedido(Integer id, User user, List<PedidoDetalleRequestDTO> detallesDTO) {
+
+        // CORRECCIÓN AQUÍ:
+        // Usamos pedidoDao directamente para obtener la ENTIDAD, no el método del DTO.
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+
         if (pedido == null)
             throw new RuntimeException("Pedido no encontrado");
 
         if (!pedido.getUser().getId().equals(user.getId()))
             throw new RuntimeException("No autorizado para actualizar este pedido");
 
-        // Eliminar detalles anteriores
+        // Limpiar detalles anteriores
         detalleService.eliminarPorPedidoId(pedido.getId());
 
         // Crear nuevos detalles
         List<Pedido_detalle> detalles = detallesDTO.stream().map(d -> {
             Pedido_detalle detalle = new Pedido_detalle();
             detalle.setPedido(pedido);
-
-            Zapatilla_variacion variacion = variacionService.buscarPorId(d.zapatillaVariacionId());
-            if (variacion == null)
-                throw new RuntimeException("Variación no encontrada: " + d.zapatillaVariacionId());
+            Zapatilla_variacion variacion = variacionService.buscarPorId(d.getZapatillaVariacionId());
             detalle.setZapatilla_variacion(variacion);
-
-            detalle.setCantidad(d.cantidad());
-            detalle.setPrecioTotal(d.precioTotal());
-
+            detalle.setCantidad(d.getCantidad());
+            detalle.setPrecioTotal(d.getPrecioTotal());
             detalleService.guardar(detalle);
             return detalle;
-        }).toList();
+        }).collect(Collectors.toList());
 
         pedido.setDetalles(detalles);
-        this.actualizar(pedido);
+        pedidoDao.update(pedido);
 
         return pedido;
     }
 
     @Override
+    @Transactional
     public void eliminarPedido(Integer id, User user) {
-        Pedido pedido = this.obtenerPedidoConDetallesPorId(id);
+        // CORRECCIÓN AQUÍ TAMBIÉN:
+        // Usamos pedidoDao directamente para obtener la ENTIDAD.
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+
         if (pedido == null)
             throw new RuntimeException("Pedido no encontrado");
 
         if (!pedido.getUser().getId().equals(user.getId()))
             throw new RuntimeException("No autorizado para eliminar este pedido");
 
-        this.eliminarPorId(id);
+        pedidoDao.deleteById(id);
+    }
+
+    private PedidoResponseDTO mapToDTO(Pedido p) {
+        List<PedidoDetalleResponseDTO> detalles = p.getDetalles().stream()
+                .map(d -> {
+                    var variacion = d.getZapatilla_variacion();
+                    var zapatilla = variacion.getZapatilla();
+                    String imagen = variacion.getImageUrl();
+                    return new PedidoDetalleResponseDTO(
+                            d.getId(),
+                            variacion.getId(),
+                            d.getCantidad(),
+                            d.getPrecioTotal(),
+                            zapatilla.getNombre(),
+                            zapatilla.getMarca(),
+                            variacion.getColor(),
+                            variacion.getTalla(),
+                            imagen);
+                })
+                .collect(Collectors.toList());
+
+        Venta venta = ventaDAO.findByPedidoId(p.getId());
+        String metodo = (venta != null) ? venta.getMetodoPago() : "Desconocido";
+
+        List<PedidoSeguimiento> historialEntity = seguimientoDao.findByPedidoIdOrderByFechaCambioDesc(p.getId());
+
+        List<SeguimientoDTO> historialDTO = historialEntity.stream()
+                .map(h -> new SeguimientoDTO(
+                        h.getEstado(),
+                        h.getFechaCambio().toString(), // O usa un formateador de fecha si prefieres
+                        h.getUsuarioResponsable()))
+                .collect(Collectors.toList());
+
+        // Obtenemos el usuario para sacar sus datos
+        User u = p.getUser();
+        System.out.println("DEBUG PEDIDO #" + p.getId() + " - Historial encontrado: " + historialEntity.size());
+
+        return new PedidoResponseDTO(
+                p.getId(),
+                u.getId(),
+                p.getEstado(),
+                p.getFechaPedido(),
+                DireccionEnvioDTO.fromEntity(p.getDireccion_envio()),
+                detalles,
+                metodo,
+                u.getNombre(),
+                u.getApellido(),
+                u.getEmail(),
+                u.getPhone(),
+                historialDTO);
+    }
+
+    @Override
+    @Transactional
+    public void cancelarPedido(Integer id, User user) {
+        // 1. Buscar el pedido
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+        if (pedido == null)
+            throw new RuntimeException("Pedido no encontrado");
+
+        // 2. Validaciones (Usuario, Estado actual...)
+        if (!pedido.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("No autorizado");
+        }
+        if ("CANCELADO".equals(pedido.getEstado())) {
+            throw new RuntimeException("El pedido ya está cancelado");
+        }
+        // ... otras validaciones
+
+        // 3. RESTAURAR STOCK (Tu lógica existente)
+        for (Pedido_detalle detalle : pedido.getDetalles()) {
+            Zapatilla_variacion variacion = detalle.getZapatilla_variacion();
+            int stockRestaurado = variacion.getStock() + detalle.getCantidad();
+            variacion.setStock(stockRestaurado);
+            variacionService.actualizar(variacion);
+        }
+
+        // 4. CAMBIAR ESTADO DEL PEDIDO
+        pedido.setEstado("CANCELADO");
+        pedidoDao.update(pedido);
+
+        // 5. ACTUALIZAR LA VENTA A "REEMBOLSADO" (NUEVO)
+        Venta venta = ventaDAO.findByPedidoId(id);
+        if (venta != null) {
+            venta.setEstadoPago("REEMBOLSADO"); // O "ANULADO"
+            ventaDAO.save(venta); // Guardamos el cambio
+        }
+    }
+
+    @Override
+    @Transactional
+    public void actualizarEstado(Integer id, String nuevoEstado, User user) {
+        Pedido pedido = pedidoDao.findById(id);
+        if (pedido == null)
+            throw new RuntimeException("Pedido no encontrado");
+
+        // Validamos si el estado es diferente para no llenar el historial de repetidos
+        if (!pedido.getEstado().equals(nuevoEstado)) {
+            pedido.setEstado(nuevoEstado);
+            pedidoDao.update(pedido);
+
+            // AQUI PASAMOS EL USUARIO REAL
+            registrarSeguimiento(pedido, nuevoEstado, user);
+        }
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto, User user) {
+        // 1. Buscar el pedido
+        Pedido pedido = pedidoDao.findByIdWithDetalles(id);
+        if (pedido == null)
+            throw new RuntimeException("Pedido no encontrado");
+
+        // --- CASO CANCELACIÓN ---
+        if ("CANCELADO".equals(dto.getEstado()) && !"CANCELADO".equals(pedido.getEstado())) {
+
+            // A. Restaurar Stock
+            for (Pedido_detalle detalle : pedido.getDetalles()) {
+                Zapatilla_variacion variacion = detalle.getZapatilla_variacion();
+                variacion.setStock(variacion.getStock() + detalle.getCantidad());
+                variacionService.actualizar(variacion);
+            }
+
+            // B. Reembolsar Venta
+            Venta venta = ventaDAO.findByPedidoId(id);
+            if (venta != null) {
+                venta.setEstadoPago("REEMBOLSADO");
+                ventaDAO.save(venta);
+            }
+
+            pedido.setEstado("CANCELADO");
+            pedidoDao.update(pedido);
+
+            // PASAMOS EL USUARIO ADMIN
+            registrarSeguimiento(pedido, "CANCELADO", user);
+
+            return mapToDTO(pedido);
+        }
+
+        // --- CASO ACTUALIZACIÓN NORMAL ---
+
+        // C. Actualizar Estado (y registrar historial si cambió)
+        if (dto.getEstado() != null && !dto.getEstado().isEmpty() && !dto.getEstado().equals(pedido.getEstado())) {
+            pedido.setEstado(dto.getEstado());
+            // REGISTRAMOS EL CAMBIO NORMAL TAMBIÉN
+            registrarSeguimiento(pedido, dto.getEstado(), user);
+        }
+
+        // D. Actualizar Método de Pago
+        if (dto.getMetodoPago() != null) {
+            Venta venta = ventaDAO.findByPedidoId(id);
+            if (venta != null) {
+                venta.setMetodoPago(dto.getMetodoPago());
+                ventaDAO.save(venta);
+            }
+        }
+
+        pedidoDao.update(pedido);
+
+        return mapToDTO(pedido);
+    }
+
+    private void registrarSeguimiento(Pedido pedido, String estado, User usuario) {
+        PedidoSeguimiento seg = new PedidoSeguimiento();
+        seg.setPedido(pedido);
+        seg.setEstado(estado);
+        seg.setFechaCambio(LocalDateTime.now());
+
+        // Si hay usuario (Admin/Repartidor) ponemos su nombre, sino "Sistema" (ej:
+        // cliente crea pedido)
+        String nombre = (usuario != null) ? usuario.getNombre() + " (" + usuario.getRoles().toString() + ")"
+                : "Cliente";
+        seg.setUsuarioResponsable(nombre);
+
+        seguimientoDao.save(seg);
+    }
+
+    public void exportSalesPdf(HttpServletResponse response) throws IOException {
+        List<Pedido> pedidos = pedidoDao.findAll(); // O filtra por fecha si prefieres
+
+        Document document = new Document(PageSize.A4.rotate()); // Horizontal para ventas
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        try {
+            PdfContentByte canvas = writer.getDirectContentUnder();
+
+            ClassPathResource imageFile = new ClassPathResource("static/logo.png");
+            Image watermark = Image.getInstance(imageFile.getURL());
+
+            watermark.scaleToFit(400, 400);
+
+            float x = (PageSize.A4.rotate().getWidth() - watermark.getScaledWidth()) / 2;
+            float y = (PageSize.A4.rotate().getHeight() - watermark.getScaledHeight()) / 2;
+
+            watermark.setAbsolutePosition(x, y);
+
+            // Transparencia (Opacidad)
+            PdfGState state = new PdfGState();
+            state.setFillOpacity(0.3f);
+            canvas.setGState(state);
+
+            canvas.addImage(watermark);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Font fontTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        fontTitle.setSize(18);
+        Paragraph paragraph = new Paragraph("Reporte de Ventas (Pedidos)", fontTitle);
+        paragraph.setAlignment(Paragraph.ALIGN_CENTER);
+        document.add(paragraph);
+        document.add(new Paragraph(" "));
+
+        // Tabla (6 columnas)
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100f);
+
+        addHeader(table, "N° Pedido");
+        addHeader(table, "Fecha");
+        addHeader(table, "Cliente");
+        addHeader(table, "Estado");
+        addHeader(table, "Método Pago");
+        addHeader(table, "Total (S/)");
+
+        DateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        for (Pedido p : pedidos) {
+            table.addCell("#" + p.getId());
+            table.addCell(dateFormatter.format(java.sql.Timestamp.valueOf(p.getFechaPedido())));
+            table.addCell(p.getUser().getNombre() + " " + p.getUser().getApellido());
+            table.addCell(p.getEstado());
+
+            // Lógica para obtener método de pago y monto (Ajusta según tu entidad Venta)
+            // Aquí asumo que puedes acceder a esto desde pedido o calcularlo
+            String metodo = "YAPE"; // Ejemplo, saca esto de p.getVenta().getMetodo()
+            double total = p.getDetalles().stream().mapToDouble(d -> d.getPrecioTotal().doubleValue()).sum();
+
+            table.addCell(metodo);
+            table.addCell(String.format("%.2f", total));
+        }
+
+        document.add(table);
+        document.close();
+    }
+
+    private void addHeader(PdfPTable table, String text) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBackgroundColor(java.awt.Color.LIGHT_GRAY);
+        cell.setPadding(5);
+        cell.setPhrase(new Phrase(text));
+        table.addCell(cell);
+    }
+
+    public void exportSalesExcel(HttpServletResponse response) throws IOException {
+        List<Pedido> pedidos = pedidoDao.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Ventas");
+
+        insertLogoToExcel(workbook, sheet, 6);
+
+        CellStyle headerStyle = workbook.createCellStyle();
+
+        org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+
+        font.setBold(true);
+        headerStyle.setFont(font);
+
+        Row headerRow = sheet.createRow(0);
+        String[] columns = { "ID Pedido", "Fecha", "Cliente", "Estado", "Total (S/)" };
+
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        DateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        for (Pedido p : pedidos) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(p.getId());
+            row.createCell(1).setCellValue(dateFormatter.format(java.sql.Timestamp.valueOf(p.getFechaPedido())));
+            row.createCell(2).setCellValue(p.getUser().getNombre() + " " + p.getUser().getApellido());
+            row.createCell(3).setCellValue(p.getEstado());
+
+            double total = p.getDetalles().stream().mapToDouble(d -> d.getPrecioTotal().doubleValue()).sum();
+            row.createCell(4).setCellValue(total);
+        }
+
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    private void insertLogoToExcel(Workbook workbook, Sheet sheet, int colNumber) {
+        try {
+            // 1. Cargar imagen
+            ClassPathResource imgFile = new ClassPathResource("static/logo.png");
+            InputStream is = imgFile.getInputStream();
+            byte[] bytes = StreamUtils.copyToByteArray(is);
+            int pictureIdx = workbook.addPicture(bytes, Workbook.PICTURE_TYPE_PNG);
+            is.close();
+
+            CreationHelper helper = workbook.getCreationHelper();
+            Drawing<?> drawing = sheet.createDrawingPatriarch();
+
+            // 2. Crear Ancla
+            ClientAnchor anchor = helper.createClientAnchor();
+            
+            // --- POSICIÓN Y TAMAÑO FIJO ---
+            
+            // COMIENZO: Columna 'colNumber', Fila 0 (Arriba)
+            anchor.setCol1(colNumber);
+            anchor.setRow1(0);
+
+            // FINAL: Columna 'colNumber + 1', Fila 3
+            // Esto significa: "Ocupa exactamente 1 columna de ancho y 3 filas de alto"
+            anchor.setCol2(colNumber + 1); 
+            anchor.setRow2(3); 
+
+            // 3. Crear imagen (SIN RESIZE)
+            // Al definir Col2 y Row2, la imagen se estira para llenar ese espacio.
+            Picture pict = drawing.createPicture(anchor, pictureIdx);
+            
+            // Opcional: Si quieres mantener la proporción original dentro de ese cuadro:
+            // pict.resize(1.0); 
+
+        } catch (Exception e) {
+            System.err.println("Error logo excel: " + e.getMessage());
+        }
     }
 }

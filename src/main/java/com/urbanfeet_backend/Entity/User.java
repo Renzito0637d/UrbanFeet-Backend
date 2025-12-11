@@ -26,6 +26,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
 import com.urbanfeet_backend.Entity.Enum.RoleName;
 import com.urbanfeet_backend.Model.ValidDocumentNumber;
@@ -49,6 +51,7 @@ import java.util.stream.Collectors;
 // Valida que el número del documento coincida con el tipo (ver clase validador
 // abajo)
 @ValidDocumentNumber
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -91,9 +94,11 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<RoleName> roles = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Direccion> direcciones;
 
+    @JsonIgnore
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Carrito carrito;
 

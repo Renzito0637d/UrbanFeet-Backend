@@ -1,6 +1,7 @@
 package com.urbanfeet_backend.Model.AuthDTOs;
 
 import com.urbanfeet_backend.Entity.Enum.DocumentType;
+import com.urbanfeet_backend.Entity.Enum.RoleName;
 
 public class RegisterRequest {
 
@@ -11,6 +12,8 @@ public class RegisterRequest {
     private String password;
     private DocumentType documentType;
     private String documentNumber;
+
+    private RoleName role;
 
     public RegisterRequest() {
     }
@@ -71,8 +74,16 @@ public class RegisterRequest {
         this.documentNumber = documentNumber;
     }
 
+    public RoleName getRole() {
+        return role;
+    }
+
+    public void setRole(RoleName role) {
+        this.role = role;
+    }
+
     public RegisterRequest(String nombre, String apellido, String email, String phone, String password,
-            DocumentType documentType, String documentNumber) {
+            DocumentType documentType, String documentNumber,RoleName role) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.email = email;
@@ -80,6 +91,7 @@ public class RegisterRequest {
         this.password = password;
         this.documentType = documentType;
         this.documentNumber = documentNumber;
+        this.role=role;
     }
 
 }

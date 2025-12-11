@@ -40,4 +40,9 @@ public class VentaDAOImpl implements VentaDAO {
         ventaRepository.deleteById(id);
     }
 
+    @Override
+    public Venta findByPedidoId(Integer pedidoId) {
+        return ventaRepository.findByPedidoId(pedidoId);
+    }
+
 }

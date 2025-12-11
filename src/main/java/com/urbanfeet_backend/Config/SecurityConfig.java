@@ -39,11 +39,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**",
                                 "/docs/**",
-                                "/actuator/health", /*
-                                                     * "/carrito/**",
-                                                     * "/carrito-items/**",
-                                                     */
-                                "/zapatilla")
+                                "/actuator/health",
+                                "/error", /*
+                                           * "/carrito/**",
+                                           * "/carrito-items/**",
+                                           */
+                                "/zapatilla/public/list",
+                                "/pedidos/all")
                         .permitAll()
 
                         // Por roles (GrantedAuthority tiene "ROLE_")

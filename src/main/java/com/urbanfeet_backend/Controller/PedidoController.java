@@ -1,6 +1,5 @@
 package com.urbanfeet_backend.Controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -8,13 +7,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 import com.urbanfeet_backend.Entity.*;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoEstadoDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
 
 @RestController
 @RequestMapping("/pedidos")
-@CrossOrigin(origins = "*")
 public class PedidoController {
 
         private final PedidoService pedidoService;
@@ -29,100 +30,131 @@ public class PedidoController {
                 this.userRepository = userRepository;
         }
 
-        // DTOs
-        public record PedidoRequestDTO(List<PedidoDetalleRequestDTO> detalles) {
+        @GetMapping("/all")
+        public ResponseEntity<List<PedidoResponseDTO>> listarTodosLosPedidos() {
+                // Usamos el servicio que devuelve DTOs pero sin filtrar por ID de usuario
+                // Necesitarás crear este método en tu servicio si no existe:
+                return ResponseEntity.ok(pedidoService.obtenerTodosLosPedidos());
         }
 
-        public record PedidoDetalleRequestDTO(Integer zapatillaVariacionId, Integer cantidad, Double precioTotal) {
-        }
-
-        public record PedidoResponseDTO(Integer id, Integer userId, String estado, LocalDateTime fechaPedido,
-                        Direccion_envioDTO direccion_envio, List<PedidoDetalleResponseDTO> detalles) {
-        }
-
-        public record PedidoDetalleResponseDTO(Integer id, Integer zapatillaVariacionId, Integer cantidad,
-                        Double precioTotal) {
-        }
-
-        public record Direccion_envioDTO(String calle, String distrito, String provincia, String departamento,
-                        String referencia) {
-                public static Direccion_envioDTO fromEntity(Direccion_envio d) {
-                        if (d == null)
-                                return null;
-                        return new Direccion_envioDTO(d.getCalle(), d.getDistrito(), d.getProvincia(),
-                                        d.getDepartamento(), d.getReferencia());
-                }
-        }
-
+        // --- CREAR PEDIDO (POST) ---
         @PostMapping
         public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody PedidoRequestDTO dto,
                         Authentication authentication) {
-                String email = authentication.getName();
-                User user = userRepository.findUserByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-                Direccion direccion = direccionService.buscarPorUsuarioId(user.getId())
-                                .stream()
-                                .findFirst()
-                                .orElseThrow(() -> new RuntimeException("Usuario no tiene dirección registrada"));
+                User user = getUser(authentication);
+                Direccion direccion = direccionService.buscarPorId(dto.getDireccionId());
 
-                Pedido pedido = pedidoService.crearPedido(user, direccion, dto.detalles());
-                return ResponseEntity.ok(mapToDTO(pedido));
+                if (direccion == null)
+                        throw new RuntimeException("La dirección no existe");
+                if (!direccion.getUser().getId().equals(user.getId()))
+                        throw new RuntimeException("Dirección inválida");
+
+                // El servicio devuelve el DTO directamente (Transacción OK)
+                PedidoResponseDTO response = pedidoService.crearPedido(
+                                user,
+                                direccion,
+                                dto.getDetalles(),
+                                dto.getMetodoPago());
+
+                return ResponseEntity.ok(response);
         }
 
+        // --- LISTAR PEDIDOS (GET) ---
         @GetMapping
         public ResponseEntity<List<PedidoResponseDTO>> listarPedidos(Authentication authentication) {
-                String email = authentication.getName();
-                User user = userRepository.findUserByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-                List<Pedido> pedidos = pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId());
-                List<PedidoResponseDTO> pedidosDTO = pedidos.stream().map(this::mapToDTO).toList();
-                return ResponseEntity.ok(pedidosDTO);
+                User user = getUser(authentication);
+                // El servicio devuelve DTOs (Transacción OK)
+                return ResponseEntity.ok(pedidoService.obtenerPedidosConDetallesPorUsuario(user.getId()));
         }
 
+        // --- OBTENER UN PEDIDO (GET /{id}) ---
         @GetMapping("/{id}")
         public ResponseEntity<PedidoResponseDTO> obtenerPedido(@PathVariable Integer id,
                         Authentication authentication) {
-                Pedido pedido = pedidoService.obtenerPedidoConDetallesPorId(id);
-                if (pedido == null)
-                        return ResponseEntity.notFound().build();
-
-                String email = authentication.getName();
-                if (!pedido.getUser().getEmail().equals(email))
+                User user = getUser(authentication);
+                try {
+                        PedidoResponseDTO dto = pedidoService.obtenerPedidoConDetallesPorId(id, user.getId());
+                        if (dto == null)
+                                return ResponseEntity.notFound().build();
+                        return ResponseEntity.ok(dto);
+                } catch (RuntimeException e) {
                         return ResponseEntity.status(403).build();
-
-                return ResponseEntity.ok(mapToDTO(pedido));
+                }
         }
 
+        // --- ACTUALIZAR PEDIDO (PUT) ---
         @PutMapping("/{id}")
-        public ResponseEntity<PedidoResponseDTO> actualizarPedido(@PathVariable Integer id,
-                        @RequestBody PedidoRequestDTO dto, Authentication authentication) {
-                String email = authentication.getName();
-                User user = userRepository.findUserByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        public ResponseEntity<?> actualizarPedido(@PathVariable Integer id,
+                        @RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
 
-                Pedido pedido = pedidoService.actualizarPedido(id, user, dto.detalles());
-                return ResponseEntity.ok(mapToDTO(pedido));
+                User user = getUser(authentication);
+
+                // CORRECCIÓN AQUÍ:
+                // Si el servicio 'actualizarPedido' devuelve una Entidad, NO la mapees aquí.
+                // Lo ideal sería que el servicio devolviera void o el DTO.
+                // Si devuelve Entidad, solo confirmamos con OK o llamamos de nuevo a
+                // 'obtenerPedido' (seguro).
+
+                pedidoService.actualizarPedido(id, user, dto.getDetalles());
+
+                // Opción segura: Volver a pedir el DTO transaccional
+                PedidoResponseDTO response = pedidoService.obtenerPedidoConDetallesPorId(id, user.getId());
+
+                return ResponseEntity.ok(response);
         }
 
+        // --- ELIMINAR PEDIDO (DELETE) ---
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id, Authentication authentication) {
-                String email = authentication.getName();
-                User user = userRepository.findUserByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        public ResponseEntity<Void> eliminarPedido(@PathVariable Integer id,
+                        Authentication authentication) {
 
+                User user = getUser(authentication);
                 pedidoService.eliminarPedido(id, user);
                 return ResponseEntity.noContent().build();
         }
 
-        private PedidoResponseDTO mapToDTO(Pedido p) {
-                List<PedidoDetalleResponseDTO> detalles = p.getDetalles().stream()
-                                .map(d -> new PedidoDetalleResponseDTO(d.getId(), d.getZapatilla_variacion().getId(),
-                                                d.getCantidad(), d.getPrecioTotal()))
-                                .toList();
+        @PatchMapping("/{id}/cancelar")
+        public ResponseEntity<Void> cancelarPedido(@PathVariable Integer id, Authentication authentication) {
+                User user = getUser(authentication); // Tu helper privado
 
-                return new PedidoResponseDTO(p.getId(), p.getUser().getId(), p.getEstado(), p.getFechaPedido(),
-                                Direccion_envioDTO.fromEntity(p.getDireccion_envio()), detalles);
+                try {
+                        pedidoService.cancelarPedido(id, user);
+                        return ResponseEntity.noContent().build();
+                } catch (RuntimeException e) {
+                        return ResponseEntity.badRequest().body(null); // O manejar el mensaje de error
+                }
+        }
+
+        @PatchMapping("/{id}/estado")
+        public ResponseEntity<Void> actualizarEstado(
+                        @PathVariable Integer id,
+                        @RequestBody PedidoEstadoDTO dto, // Usamos el DTO o un Map<String, String>
+                        Authentication authentication) {
+
+                User user = getUser(authentication);
+
+                pedidoService.actualizarEstado(id, dto.estado(), user);
+
+                return ResponseEntity.ok().build();
+        }
+
+        @PutMapping("/admin/{id}")
+        public ResponseEntity<PedidoResponseDTO> actualizarPedidoAdmin(
+                        @PathVariable Integer id,
+                        @RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
+
+                User user = getUser(authentication);
+
+                PedidoResponseDTO response = pedidoService.actualizarPedidoAdmin(id, dto, user);
+
+                return ResponseEntity.ok(response);
+        }
+
+        private User getUser(Authentication auth) {
+                return userRepository.findUserByEmail(auth.getName())
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         }
 }

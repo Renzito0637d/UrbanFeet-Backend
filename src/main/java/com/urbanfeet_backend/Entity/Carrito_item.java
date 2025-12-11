@@ -19,7 +19,7 @@ public class Carrito_item {
 
     @ManyToOne
     @JoinColumn(name = "zapatilla_variacion_id")
-    private Zapatilla_variacion zapatilla_variacion;
+    private Zapatilla_variacion zapatillaVariacion;
 
     private Integer cantidad;
 
@@ -29,7 +29,7 @@ public class Carrito_item {
     public Carrito_item(Integer id, Carrito carrito, Zapatilla_variacion zapatilla_variacion, Integer cantidad) {
         this.id = id;
         this.carrito = carrito;
-        this.zapatilla_variacion = zapatilla_variacion;
+        this.zapatillaVariacion = zapatilla_variacion;
         this.cantidad = cantidad;
     }
 
@@ -50,11 +50,11 @@ public class Carrito_item {
     }
 
     public Zapatilla_variacion getZapatilla_variacion() {
-        return zapatilla_variacion;
+        return zapatillaVariacion;
     }
 
     public void setZapatilla_variacion(Zapatilla_variacion zapatilla_variacion) {
-        this.zapatilla_variacion = zapatilla_variacion;
+        this.zapatillaVariacion = zapatilla_variacion;
     }
 
     public Integer getCantidad() {
