@@ -134,10 +134,9 @@ public class PedidoController {
                         @RequestBody PedidoEstadoDTO dto, // Usamos el DTO o un Map<String, String>
                         Authentication authentication) {
 
-                // Validar si el usuario es ADMIN o REPARTIDOR si usas roles
-                // Si es libre para el admin/repartidor, llamamos directo:
+                User user = getUser(authentication);
 
-                pedidoService.actualizarEstado(id, dto.estado());
+                pedidoService.actualizarEstado(id, dto.estado(), user);
 
                 return ResponseEntity.ok().build();
         }
@@ -145,13 +144,12 @@ public class PedidoController {
         @PutMapping("/admin/{id}")
         public ResponseEntity<PedidoResponseDTO> actualizarPedidoAdmin(
                         @PathVariable Integer id,
-                        @RequestBody PedidoRequestDTO dto) {
+                        @RequestBody PedidoRequestDTO dto,
+                        Authentication authentication) {
 
-                // Nota: No necesitamos pasar el 'authentication' ni validar el usuario aquí
-                // porque asumimos que Spring Security ya protegió la ruta /admin/** // o
-                // confías en que este método es administrativo.
+                User user = getUser(authentication);
 
-                PedidoResponseDTO response = pedidoService.actualizarPedidoAdmin(id, dto);
+                PedidoResponseDTO response = pedidoService.actualizarPedidoAdmin(id, dto, user);
 
                 return ResponseEntity.ok(response);
         }
