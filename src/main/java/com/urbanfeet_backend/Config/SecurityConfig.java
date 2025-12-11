@@ -41,10 +41,11 @@ public class SecurityConfig {
                                 "/docs/**",
                                 "/actuator/health",
                                 "/error", /*
-                                                     * "/carrito/**",
-                                                     * "/carrito-items/**",
-                                                     */
-                                "/zapatilla/public/list")
+                                           * "/carrito/**",
+                                           * "/carrito-items/**",
+                                           */
+                                "/zapatilla/public/list",
+                                "/pedidos/all")
                         .permitAll()
 
                         // Por roles (GrantedAuthority tiene "ROLE_")
