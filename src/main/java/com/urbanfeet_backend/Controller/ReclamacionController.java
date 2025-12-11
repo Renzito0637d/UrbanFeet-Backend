@@ -16,7 +16,6 @@ import com.urbanfeet_backend.Services.Interfaces.ReclamacionService;
 
 @RestController
 @RequestMapping("/reclamaciones")
-@CrossOrigin(origins = "*")
 public class ReclamacionController {
 
     private final ReclamacionService reclamacionService;
@@ -57,6 +56,7 @@ public class ReclamacionController {
         r.setTipoMensaje(dto.tipoMensaje);
         r.setDetalleReclamo(dto.detalleReclamo);
         r.setSolucionPropuesta(dto.solucionPropuesta);
+        r.setDireccion(dto.direccion);
 
         Reclamacion creado = reclamacionService.crearReclamacion(r, user.getId());
         return ResponseEntity.ok(toResponse(creado));
@@ -98,6 +98,8 @@ public class ReclamacionController {
         data.setDetalleReclamo(dto.detalleReclamo);
         data.setSolucionPropuesta(dto.solucionPropuesta);
 
+        data.setEstado(dto.estado);
+
         return ResponseEntity.ok(toResponse(reclamacionService.actualizar(id, data)));
     }
 
@@ -118,6 +120,14 @@ public class ReclamacionController {
         dto.fechaRegistro = r.getFechaRegistro() != null ? r.getFechaRegistro().toString() : null;
         dto.estado = r.getEstado();
         dto.userId = r.getUser() != null ? r.getUser().getId() : null;
+        dto.direccion = r.getDireccion();
+
+        if (r.getUser() != null) {
+            dto.nombreUsuario = r.getUser().getNombre() + " " + r.getUser().getApellido();
+            dto.documentoUsuario = r.getUser().getDocumentNumber();
+            dto.emailUsuario = r.getUser().getEmail();
+            dto.telefonoUsuario = r.getUser().getPhone();
+        }
 
         return dto;
     }

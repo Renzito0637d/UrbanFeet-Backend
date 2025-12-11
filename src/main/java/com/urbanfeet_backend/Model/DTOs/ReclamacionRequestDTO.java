@@ -6,4 +6,6 @@ public class ReclamacionRequestDTO {
     public String tipoMensaje;
     public String detalleReclamo;
     public String solucionPropuesta;
+    public String direccion;
+    public String estado;
 }

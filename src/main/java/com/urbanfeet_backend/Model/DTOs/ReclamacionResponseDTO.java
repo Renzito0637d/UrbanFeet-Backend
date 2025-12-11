@@ -9,5 +9,11 @@ public class ReclamacionResponseDTO {
     public String solucionPropuesta;
     public String fechaRegistro;
     public String estado;
+    public String direccion;
     public Integer userId;
+
+    public String nombreUsuario;
+    public String documentoUsuario;
+    public String emailUsuario;
+    public String telefonoUsuario;
 }
