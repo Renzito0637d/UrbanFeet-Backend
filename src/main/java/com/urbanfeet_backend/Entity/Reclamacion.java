@@ -30,6 +30,8 @@ public class Reclamacion {
 
     private String estado;
 
+    private String direccion;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
@@ -39,7 +41,7 @@ public class Reclamacion {
 
     public Reclamacion(Integer id, String producto, Double montoReclamado, String tipoMensaje,
             String detalleReclamo, String solucionPropuesta,
-            LocalDateTime fechaRegistro, String estado, User user) {
+            LocalDateTime fechaRegistro, String estado, String direccion, User user) {
 
         this.id = id;
         this.producto = producto;
@@ -49,6 +51,7 @@ public class Reclamacion {
         this.solucionPropuesta = solucionPropuesta;
         this.fechaRegistro = fechaRegistro;
         this.estado = estado;
+        this.direccion = direccion;
         this.user = user;
     }
 
@@ -82,6 +85,10 @@ public class Reclamacion {
 
     public String getEstado() {
         return estado;
+    }
+
+    public String getDireccion() {
+        return direccion;
     }
 
     public User getUser() {
@@ -118,6 +125,10 @@ public class Reclamacion {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
     }
 
     public void setUser(User user) {

@@ -35,7 +35,7 @@ public interface PedidoService {
 
     public void cancelarPedido(Integer id, User user);
 
-    void actualizarEstado(Integer id, String nuevoEstado);
+    void actualizarEstado(Integer id, String nuevoEstado, User user);
 
-    PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto);
+    PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto, User user);
 }

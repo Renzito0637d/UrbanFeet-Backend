@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.urbanfeet_backend.DAO.Interfaces.PedidoDAO;
+import com.urbanfeet_backend.DAO.Interfaces.PedidoSeguimientoDAO;
 import com.urbanfeet_backend.DAO.Interfaces.VentaDAO;
 import com.urbanfeet_backend.Entity.*;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
@@ -24,6 +25,7 @@ import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoDetalleResponseDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
 import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
+import com.urbanfeet_backend.Model.DTOs.SeguimientoDTO;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -33,6 +35,9 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Autowired
     private VentaDAO ventaDAO;
+
+    @Autowired
+    private PedidoSeguimientoDAO seguimientoDao;
 
     @Autowired
     private Pedido_detalleService detalleService;
@@ -162,9 +167,7 @@ public class PedidoServiceImpl implements PedidoService {
         venta.setMontoPagado(BigDecimal.valueOf(sumaTotal));
         ventaService.guardar(venta);
 
-        // 4. CAMBIO AQUÍ: Convertir a DTO antes de salir
-        // Como estamos dentro de @Transactional, podemos leer los nombres de zapatillas
-        // sin error
+        registrarSeguimiento(pedido, "PENDIENTE", user);
         return mapToDTO(pedido);
     }
 
@@ -239,8 +242,18 @@ public class PedidoServiceImpl implements PedidoService {
         Venta venta = ventaDAO.findByPedidoId(p.getId());
         String metodo = (venta != null) ? venta.getMetodoPago() : "Desconocido";
 
+        List<PedidoSeguimiento> historialEntity = seguimientoDao.findByPedidoIdOrderByFechaCambioDesc(p.getId());
+
+        List<SeguimientoDTO> historialDTO = historialEntity.stream()
+                .map(h -> new SeguimientoDTO(
+                        h.getEstado(),
+                        h.getFechaCambio().toString(), // O usa un formateador de fecha si prefieres
+                        h.getUsuarioResponsable()))
+                .collect(Collectors.toList());
+
         // Obtenemos el usuario para sacar sus datos
         User u = p.getUser();
+        System.out.println("DEBUG PEDIDO #" + p.getId() + " - Historial encontrado: " + historialEntity.size());
 
         return new PedidoResponseDTO(
                 p.getId(),
@@ -253,7 +266,8 @@ public class PedidoServiceImpl implements PedidoService {
                 u.getNombre(),
                 u.getApellido(),
                 u.getEmail(),
-                u.getPhone());
+                u.getPhone(),
+                historialDTO);
     }
 
     @Override
@@ -295,27 +309,30 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional
-    public void actualizarEstado(Integer id, String nuevoEstado) {
-        Pedido pedido = pedidoDao.findById(id); // No necesitamos detalles para esto, carga rápida
-        if (pedido == null) {
+    public void actualizarEstado(Integer id, String nuevoEstado, User user) {
+        Pedido pedido = pedidoDao.findById(id);
+        if (pedido == null)
             throw new RuntimeException("Pedido no encontrado");
+
+        // Validamos si el estado es diferente para no llenar el historial de repetidos
+        if (!pedido.getEstado().equals(nuevoEstado)) {
+            pedido.setEstado(nuevoEstado);
+            pedidoDao.update(pedido);
+
+            // AQUI PASAMOS EL USUARIO REAL
+            registrarSeguimiento(pedido, nuevoEstado, user);
         }
-
-        // Aquí puedes agregar validaciones de transición de estado si quieres
-        // Ej: No pasar de ENTREGADO a PENDIENTE
-
-        pedido.setEstado(nuevoEstado);
-        pedidoDao.update(pedido);
     }
 
     @Override
     @Transactional
-    public PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto) {
+    public PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto, User user) {
         // 1. Buscar el pedido
         Pedido pedido = pedidoDao.findByIdWithDetalles(id);
         if (pedido == null)
             throw new RuntimeException("Pedido no encontrado");
 
+        // --- CASO CANCELACIÓN ---
         if ("CANCELADO".equals(dto.getEstado()) && !"CANCELADO".equals(pedido.getEstado())) {
 
             // A. Restaurar Stock
@@ -334,15 +351,23 @@ public class PedidoServiceImpl implements PedidoService {
 
             pedido.setEstado("CANCELADO");
             pedidoDao.update(pedido);
+
+            // PASAMOS EL USUARIO ADMIN
+            registrarSeguimiento(pedido, "CANCELADO", user);
+
             return mapToDTO(pedido);
         }
 
-        // C. Actualizar Estado
-        if (dto.getEstado() != null && !dto.getEstado().isEmpty()) {
+        // --- CASO ACTUALIZACIÓN NORMAL ---
+
+        // C. Actualizar Estado (y registrar historial si cambió)
+        if (dto.getEstado() != null && !dto.getEstado().isEmpty() && !dto.getEstado().equals(pedido.getEstado())) {
             pedido.setEstado(dto.getEstado());
+            // REGISTRAMOS EL CAMBIO NORMAL TAMBIÉN
+            registrarSeguimiento(pedido, dto.getEstado(), user);
         }
 
-        // D. Actualizar Método de Pago (Solo texto en la venta)
+        // D. Actualizar Método de Pago
         if (dto.getMetodoPago() != null) {
             Venta venta = ventaDAO.findByPedidoId(id);
             if (venta != null) {
@@ -354,5 +379,20 @@ public class PedidoServiceImpl implements PedidoService {
         pedidoDao.update(pedido);
 
         return mapToDTO(pedido);
+    }
+
+    private void registrarSeguimiento(Pedido pedido, String estado, User usuario) {
+        PedidoSeguimiento seg = new PedidoSeguimiento();
+        seg.setPedido(pedido);
+        seg.setEstado(estado);
+        seg.setFechaCambio(LocalDateTime.now());
+
+        // Si hay usuario (Admin/Repartidor) ponemos su nombre, sino "Sistema" (ej:
+        // cliente crea pedido)
+        String nombre = (usuario != null) ? usuario.getNombre() + " (" + usuario.getRoles().toString() + ")"
+                : "Cliente";
+        seg.setUsuarioResponsable(nombre);
+
+        seguimientoDao.save(seg);
     }
 }
