@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import com.urbanfeet_backend.Entity.Direccion;
 import com.urbanfeet_backend.Entity.Direccion_envio;
 import com.urbanfeet_backend.Entity.User;
-import com.urbanfeet_backend.Model.DTOs.DireccionDTO;
-import com.urbanfeet_backend.Model.DTOs.DireccionRequestDTO;
+import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionDTO;
+import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionRequestDTO;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Implements.DireccionServiceImpl;
 

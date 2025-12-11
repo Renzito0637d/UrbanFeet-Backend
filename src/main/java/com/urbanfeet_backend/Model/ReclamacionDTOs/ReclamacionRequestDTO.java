@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.ReclamacionDTOs;
 
 public class ReclamacionRequestDTO {
     public String producto;

@@ -2,11 +2,11 @@ package com.urbanfeet_backend.Services.Interfaces;
 
 import java.util.List;
 
-import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
 import com.urbanfeet_backend.Entity.Pedido;
 import com.urbanfeet_backend.Entity.User;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
 import com.urbanfeet_backend.Entity.Direccion;
 
 public interface PedidoService {

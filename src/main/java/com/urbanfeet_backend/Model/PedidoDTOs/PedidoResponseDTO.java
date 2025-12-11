@@ -1,7 +1,9 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.PedidoDTOs;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionEnvioDTO;
 
 public class PedidoResponseDTO {
     public Integer id;

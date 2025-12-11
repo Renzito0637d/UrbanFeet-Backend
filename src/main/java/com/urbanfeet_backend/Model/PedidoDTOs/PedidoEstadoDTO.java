@@ -1,3 +1,3 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.PedidoDTOs;
 
 public record PedidoEstadoDTO(String estado) {}

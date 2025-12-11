@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.PedidoDTOs;
 
 public class PedidoDetalleResponseDTO {
     public Integer id;
