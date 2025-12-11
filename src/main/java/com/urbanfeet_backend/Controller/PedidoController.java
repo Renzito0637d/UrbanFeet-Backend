@@ -7,13 +7,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 import com.urbanfeet_backend.Entity.*;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoEstadoDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.DireccionService;
-import com.urbanfeet_backend.Model.DTOs.PedidoEstadoDTO;
-// Importar los DTOs
-import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
 
 @RestController
 @RequestMapping("/pedidos")

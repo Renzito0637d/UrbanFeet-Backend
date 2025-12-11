@@ -20,12 +20,12 @@ import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 import com.urbanfeet_backend.Services.Interfaces.VentaService;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
-import com.urbanfeet_backend.Model.DTOs.DireccionEnvioDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoDetalleRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoDetalleResponseDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.PedidoResponseDTO;
-import com.urbanfeet_backend.Model.DTOs.SeguimientoDTO;
+import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionEnvioDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleResponseDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
+import com.urbanfeet_backend.Model.PedidoDTOs.SeguimientoDTO;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -227,6 +227,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(d -> {
                     var variacion = d.getZapatilla_variacion();
                     var zapatilla = variacion.getZapatilla();
+                    String imagen = variacion.getImageUrl();
                     return new PedidoDetalleResponseDTO(
                             d.getId(),
                             variacion.getId(),
@@ -235,7 +236,8 @@ public class PedidoServiceImpl implements PedidoService {
                             zapatilla.getNombre(),
                             zapatilla.getMarca(),
                             variacion.getColor(),
-                            variacion.getTalla());
+                            variacion.getTalla(),
+                        imagen);
                 })
                 .collect(Collectors.toList());
 

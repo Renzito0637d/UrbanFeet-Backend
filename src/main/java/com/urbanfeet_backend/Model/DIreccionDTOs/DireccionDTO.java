@@ -1,6 +1,7 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.DIreccionDTOs;
 
-public class DireccionRequestDTO {
+public class DireccionDTO {
+    public Integer id;
     public String calle;
     public String distrito;
     public String provincia;

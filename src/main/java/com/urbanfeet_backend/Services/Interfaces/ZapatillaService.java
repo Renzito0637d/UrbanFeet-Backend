@@ -1,5 +1,7 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -24,4 +26,7 @@ public interface ZapatillaService {
     void eliminarPorId(Integer id);
 
     Zapatilla actualizarZapatilla(Integer id, ZapatillaRequest request);
+
+    Page<ZapatillaResponse> filtrarCatalogo(List<String> marcas, String genero, String tipo, String talla, Double min,
+            Double max, Pageable pageable);
 }

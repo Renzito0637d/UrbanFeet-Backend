@@ -1,5 +1,7 @@
 package com.urbanfeet_backend.DAO.Implements;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,5 +57,11 @@ public class ZapatillaDAOImpl implements ZapatillaDAO {
     @Override
     public Page<Zapatilla> findByVariacionesIsNotEmpty(Pageable pageable) {
         return zapatillaRepository.findByVariacionesIsNotEmpty(pageable);
+    }
+
+    @Override
+    public Page<Zapatilla> findByFilters(List<String> marcas, String genero, String tipo, String talla, Double min,
+            Double max, Pageable pageable) {
+        return zapatillaRepository.findByFilters(marcas, genero, tipo, talla, min, max, pageable);
     }
 }

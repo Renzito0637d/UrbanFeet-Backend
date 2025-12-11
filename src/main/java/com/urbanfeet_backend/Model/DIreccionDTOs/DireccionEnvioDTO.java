@@ -1,4 +1,4 @@
-package com.urbanfeet_backend.Model.DTOs;
+package com.urbanfeet_backend.Model.DIreccionDTOs;
 
 import com.urbanfeet_backend.Entity.Direccion_envio;
 

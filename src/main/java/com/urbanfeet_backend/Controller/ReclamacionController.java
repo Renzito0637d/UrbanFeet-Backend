@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.urbanfeet_backend.Entity.Reclamacion;
 import com.urbanfeet_backend.Entity.User;
-import com.urbanfeet_backend.Model.DTOs.ReclamacionRequestDTO;
-import com.urbanfeet_backend.Model.DTOs.ReclamacionResponseDTO;
+import com.urbanfeet_backend.Model.ReclamacionDTOs.ReclamacionRequestDTO;
+import com.urbanfeet_backend.Model.ReclamacionDTOs.ReclamacionResponseDTO;
 import com.urbanfeet_backend.Repository.UserRepository;
 import com.urbanfeet_backend.Services.Interfaces.ReclamacionService;
 
