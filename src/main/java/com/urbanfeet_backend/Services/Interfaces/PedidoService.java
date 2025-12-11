@@ -1,5 +1,6 @@
 package com.urbanfeet_backend.Services.Interfaces;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.urbanfeet_backend.Entity.Pedido;
@@ -7,6 +8,9 @@ import com.urbanfeet_backend.Entity.User;
 import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleRequestDTO;
 import com.urbanfeet_backend.Model.PedidoDTOs.PedidoRequestDTO;
 import com.urbanfeet_backend.Model.PedidoDTOs.PedidoResponseDTO;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import com.urbanfeet_backend.Entity.Direccion;
 
 public interface PedidoService {
@@ -38,4 +42,8 @@ public interface PedidoService {
     void actualizarEstado(Integer id, String nuevoEstado, User user);
 
     PedidoResponseDTO actualizarPedidoAdmin(Integer id, PedidoRequestDTO dto, User user);
+
+    public void exportSalesPdf(HttpServletResponse response) throws IOException;
+
+    public void exportSalesExcel(HttpServletResponse response) throws IOException;
 }

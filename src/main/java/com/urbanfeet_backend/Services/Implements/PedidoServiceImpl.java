@@ -1,6 +1,10 @@
 package com.urbanfeet_backend.Services.Implements;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -8,10 +12,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.Picture;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfGState;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import com.urbanfeet_backend.DAO.Interfaces.PedidoDAO;
 import com.urbanfeet_backend.DAO.Interfaces.PedidoSeguimientoDAO;
 import com.urbanfeet_backend.DAO.Interfaces.VentaDAO;
@@ -20,6 +48,9 @@ import com.urbanfeet_backend.Services.Interfaces.PedidoService;
 import com.urbanfeet_backend.Services.Interfaces.Pedido_detalleService;
 import com.urbanfeet_backend.Services.Interfaces.VentaService;
 import com.urbanfeet_backend.Services.Interfaces.Zapatilla_variacionService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import com.urbanfeet_backend.Model.DIreccionDTOs.DireccionEnvioDTO;
 import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleRequestDTO;
 import com.urbanfeet_backend.Model.PedidoDTOs.PedidoDetalleResponseDTO;
@@ -237,7 +268,7 @@ public class PedidoServiceImpl implements PedidoService {
                             zapatilla.getMarca(),
                             variacion.getColor(),
                             variacion.getTalla(),
-                        imagen);
+                            imagen);
                 })
                 .collect(Collectors.toList());
 
@@ -396,5 +427,169 @@ public class PedidoServiceImpl implements PedidoService {
         seg.setUsuarioResponsable(nombre);
 
         seguimientoDao.save(seg);
+    }
+
+    public void exportSalesPdf(HttpServletResponse response) throws IOException {
+        List<Pedido> pedidos = pedidoDao.findAll(); // O filtra por fecha si prefieres
+
+        Document document = new Document(PageSize.A4.rotate()); // Horizontal para ventas
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        try {
+            PdfContentByte canvas = writer.getDirectContentUnder();
+
+            ClassPathResource imageFile = new ClassPathResource("static/logo.png");
+            Image watermark = Image.getInstance(imageFile.getURL());
+
+            watermark.scaleToFit(400, 400);
+
+            float x = (PageSize.A4.rotate().getWidth() - watermark.getScaledWidth()) / 2;
+            float y = (PageSize.A4.rotate().getHeight() - watermark.getScaledHeight()) / 2;
+
+            watermark.setAbsolutePosition(x, y);
+
+            // Transparencia (Opacidad)
+            PdfGState state = new PdfGState();
+            state.setFillOpacity(0.3f);
+            canvas.setGState(state);
+
+            canvas.addImage(watermark);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Font fontTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+        fontTitle.setSize(18);
+        Paragraph paragraph = new Paragraph("Reporte de Ventas (Pedidos)", fontTitle);
+        paragraph.setAlignment(Paragraph.ALIGN_CENTER);
+        document.add(paragraph);
+        document.add(new Paragraph(" "));
+
+        // Tabla (6 columnas)
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100f);
+
+        addHeader(table, "N° Pedido");
+        addHeader(table, "Fecha");
+        addHeader(table, "Cliente");
+        addHeader(table, "Estado");
+        addHeader(table, "Método Pago");
+        addHeader(table, "Total (S/)");
+
+        DateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        for (Pedido p : pedidos) {
+            table.addCell("#" + p.getId());
+            table.addCell(dateFormatter.format(java.sql.Timestamp.valueOf(p.getFechaPedido())));
+            table.addCell(p.getUser().getNombre() + " " + p.getUser().getApellido());
+            table.addCell(p.getEstado());
+
+            // Lógica para obtener método de pago y monto (Ajusta según tu entidad Venta)
+            // Aquí asumo que puedes acceder a esto desde pedido o calcularlo
+            String metodo = "YAPE"; // Ejemplo, saca esto de p.getVenta().getMetodo()
+            double total = p.getDetalles().stream().mapToDouble(d -> d.getPrecioTotal().doubleValue()).sum();
+
+            table.addCell(metodo);
+            table.addCell(String.format("%.2f", total));
+        }
+
+        document.add(table);
+        document.close();
+    }
+
+    private void addHeader(PdfPTable table, String text) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBackgroundColor(java.awt.Color.LIGHT_GRAY);
+        cell.setPadding(5);
+        cell.setPhrase(new Phrase(text));
+        table.addCell(cell);
+    }
+
+    public void exportSalesExcel(HttpServletResponse response) throws IOException {
+        List<Pedido> pedidos = pedidoDao.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Ventas");
+
+        insertLogoToExcel(workbook, sheet, 6);
+
+        CellStyle headerStyle = workbook.createCellStyle();
+
+        org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+
+        font.setBold(true);
+        headerStyle.setFont(font);
+
+        Row headerRow = sheet.createRow(0);
+        String[] columns = { "ID Pedido", "Fecha", "Cliente", "Estado", "Total (S/)" };
+
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        DateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        for (Pedido p : pedidos) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(p.getId());
+            row.createCell(1).setCellValue(dateFormatter.format(java.sql.Timestamp.valueOf(p.getFechaPedido())));
+            row.createCell(2).setCellValue(p.getUser().getNombre() + " " + p.getUser().getApellido());
+            row.createCell(3).setCellValue(p.getEstado());
+
+            double total = p.getDetalles().stream().mapToDouble(d -> d.getPrecioTotal().doubleValue()).sum();
+            row.createCell(4).setCellValue(total);
+        }
+
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    private void insertLogoToExcel(Workbook workbook, Sheet sheet, int colNumber) {
+        try {
+            // 1. Cargar imagen
+            ClassPathResource imgFile = new ClassPathResource("static/logo.png");
+            InputStream is = imgFile.getInputStream();
+            byte[] bytes = StreamUtils.copyToByteArray(is);
+            int pictureIdx = workbook.addPicture(bytes, Workbook.PICTURE_TYPE_PNG);
+            is.close();
+
+            CreationHelper helper = workbook.getCreationHelper();
+            Drawing<?> drawing = sheet.createDrawingPatriarch();
+
+            // 2. Crear Ancla
+            ClientAnchor anchor = helper.createClientAnchor();
+            
+            // --- POSICIÓN Y TAMAÑO FIJO ---
+            
+            // COMIENZO: Columna 'colNumber', Fila 0 (Arriba)
+            anchor.setCol1(colNumber);
+            anchor.setRow1(0);
+
+            // FINAL: Columna 'colNumber + 1', Fila 3
+            // Esto significa: "Ocupa exactamente 1 columna de ancho y 3 filas de alto"
+            anchor.setCol2(colNumber + 1); 
+            anchor.setRow2(3); 
+
+            // 3. Crear imagen (SIN RESIZE)
+            // Al definir Col2 y Row2, la imagen se estira para llenar ese espacio.
+            Picture pict = drawing.createPicture(anchor, pictureIdx);
+            
+            // Opcional: Si quieres mantener la proporción original dentro de ese cuadro:
+            // pict.resize(1.0); 
+
+        } catch (Exception e) {
+            System.err.println("Error logo excel: " + e.getMessage());
+        }
     }
 }
