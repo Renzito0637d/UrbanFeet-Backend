@@ -42,7 +42,7 @@ public class ZapatillaServiceImpl implements ZapatillaService {
     @Transactional(readOnly = true) // <--- IMPORTANTE: Mantiene la sesión abierta
     public ZapatillaResponse obtenerZapatillaPorId(Integer id) {
         Zapatilla z = zapatillaDao.findById(id);
-        
+
         if (z == null) {
             return null;
         }
@@ -64,6 +64,7 @@ public class ZapatillaServiceImpl implements ZapatillaService {
         // El método .map() es nativo de Spring Data, itera internamente
         return paginaZapatillas.map(this::mapToDto);
     }
+
     // Método auxiliar para convertir Entidad -> DTO
     private ZapatillaResponse mapToDto(Zapatilla z) {
         ZapatillaResponse dto = new ZapatillaResponse();
@@ -125,8 +126,17 @@ public class ZapatillaServiceImpl implements ZapatillaService {
     @Override
     public Page<ZapatillaResponse> obtenerCatalogoPublico(Pageable pageable) {
         Page<Zapatilla> pagina = zapatillaDao.findByVariacionesIsNotEmpty(pageable);
-        
+
         // Convertimos a DTO
         return pagina.map(this::mapToDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ZapatillaResponse> filtrarCatalogo(List<String> marcas, String genero, String tipo, String talla,
+            Double min, Double max, Pageable pageable) {
+        Page<Zapatilla> resultados = zapatillaDao.findByFilters(marcas, genero, tipo, talla, min, max, pageable);
+
+        return resultados.map(this::mapToDto);
     }
 }

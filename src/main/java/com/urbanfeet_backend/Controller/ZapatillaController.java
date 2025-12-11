@@ -66,15 +66,31 @@ public class ZapatillaController {
 
     @GetMapping("/public/list")
     public ResponseEntity<Page<ZapatillaResponse>> listarCatalogoPublico(
+
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir // Mejor desc para ver lo nuevo primero
+            @RequestParam(defaultValue = "desc") String sortDir,
+
+            @RequestParam(required = false) List<String> marcas, 
+            @RequestParam(required = false) String genero,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String talla,
+            @RequestParam(required = false) Double min,
+            @RequestParam(required = false) Double max
     ) {
+        
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ResponseEntity.ok(zapatillaService.obtenerCatalogoPublico(pageable));
+        return ResponseEntity.ok(zapatillaService.filtrarCatalogo(
+                marcas,
+                genero,
+                tipo,
+                talla,
+                min,
+                max,
+                pageable));
     }
 
     @PutMapping("/{id}")
